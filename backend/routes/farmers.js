@@ -5,7 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
 
 // All routes here require an authenticated supervisor
-const guard = [authenticate, roleGuard('supervisor')];
+const guard = [authenticate, roleGuard('supervisor', 'manager')];
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  GET /api/farmers/search?q=<term>
@@ -77,12 +77,15 @@ router.get('/:id/farms', guard, async (req, res, next) => {
           f.location,
           f.crop_types,
           f.created_at,
-          COUNT(v.id) AS visit_count,
-          MAX(v.visit_date) AS last_visit_date
+          COUNT(v.id)                                              AS visit_count,
+          MAX(v.visit_date)                                        AS last_visit_date,
+          COALESCE(jsonb_array_length(mr.content->'next_steps'), 0) AS total_tasks,
+          COALESCE(jsonb_array_length(mr.completed_tasks),        0) AS completed_task_count
        FROM farms f
-       LEFT JOIN visits v ON v.farm_id = f.id
+       LEFT JOIN visits         v  ON v.farm_id  = f.id
+       LEFT JOIN master_reports mr ON mr.farm_id = f.id
        WHERE f.farmer_id = $1
-       GROUP BY f.id
+       GROUP BY f.id, mr.content, mr.completed_tasks
        ORDER BY f.created_at DESC`,
       [id]
     );

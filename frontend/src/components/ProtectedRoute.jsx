@@ -34,15 +34,19 @@ export default function ProtectedRoute({ children, requiredRole }) {
   // Google OAuth new-user: must complete profile before anything else
   if (role === 'pending') return <Navigate to="/complete-profile" replace />;
 
-  // Role guard — hard redirect with a descriptive state message
-  if (requiredRole && role !== requiredRole) {
+  // Role guard — accepts a single role string or an array of allowed roles
+  const allowed = requiredRole
+    ? (Array.isArray(requiredRole) ? requiredRole : [requiredRole])
+    : null;
+
+  if (allowed && !allowed.includes(role)) {
     return (
       <Navigate
         to="/dashboard"
         replace
         state={{
           accessDenied: true,
-          message: `You need the "${requiredRole}" role to access this page.`,
+          message: `You need the "${allowed.join(' or ')}" role to access this page.`,
           from: location.pathname,
         }}
       />

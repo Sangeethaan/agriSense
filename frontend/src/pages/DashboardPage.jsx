@@ -74,36 +74,7 @@ export default function DashboardPage() {
           Signed in as <strong style={{ color: cfg.accent }}>{cfg.label}</strong> · {user?.email}
         </p>
 
-        {/* Supervisor module CTA */}
-        {role === 'supervisor' && (
-          <button
-            id="btn-open-supervisor-module"
-            onClick={() => navigate('/supervisor')}
-            style={{
-              width: '100%',
-              padding: '13px 20px',
-              background: 'linear-gradient(135deg, #4a9470, #2d6649)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 12,
-              fontWeight: 700,
-              fontSize: '.95rem',
-              cursor: 'pointer',
-              marginBottom: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 9,
-              boxShadow: '0 4px 18px rgba(74,148,112,.32)',
-              transition: 'box-shadow .2s, transform .2s',
-              fontFamily: 'inherit',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(74,148,112,.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 18px rgba(74,148,112,.32)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-          >
-            🔍 Open Supervisor Module →
-          </button>
-        )}
+
 
         <button
           id="btn-dashboard-logout"

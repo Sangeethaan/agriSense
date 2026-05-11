@@ -36,11 +36,14 @@ export default function OAuthCallback() {
       return;
     }
 
-    // Persist auth state globally
     login(token, { id, name, email, role });
 
-    // Clean the URL and go to dashboard
-    navigate('/dashboard', { replace: true });
+    let dest = '/dashboard';
+    if (role === 'supervisor') dest = '/supervisor';
+    if (role === 'farmer')     dest = '/farmer/dashboard';
+    if (role === 'manager')    dest = '/manager';
+    navigate(dest, { replace: true });
+
   }, [login, navigate]);
 
   return (

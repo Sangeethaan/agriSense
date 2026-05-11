@@ -195,5 +195,172 @@ router.patch('/update-role', authenticate, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-module.exports = router;
 
+// ─────────────────────────────────────────────────────────────
+//  GET /api/auth/invite/:token
+//  Public — validates an invite token and returns the farmer's
+//  name so the AcceptInvite page can greet them.
+// ─────────────────────────────────────────────────────────────
+router.get('/invite/:token', async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { rows } = await query(
+      `SELECT id, name, email, status, invite_expires_at
+       FROM   users
+       WHERE  invite_token = $1 AND role = 'farmer'`,
+      [token]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Invite link is invalid or has already been used.' });
+    }
+
+    const farmer = rows[0];
+
+    if (farmer.status !== 'pending') {
+      return res.status(410).json({ error: 'This invite has already been accepted.' });
+    }
+
+    if (new Date(farmer.invite_expires_at) < new Date()) {
+      return res.status(410).json({ error: 'This invite link has expired. Please ask your supervisor to resend it.' });
+    }
+
+    return res.json({ name: farmer.name, email: farmer.email });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────────────────────
+//  POST /api/auth/accept-invite
+//  Public — farmer sets their password and activates account.
+//  Body: { token, password }
+// ─────────────────────────────────────────────────────────────
+router.post('/accept-invite', async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password || password.length < 8) {
+      return res.status(400).json({ error: 'token and password (min 8 chars) are required.' });
+    }
+
+    const { rows } = await query(
+      `SELECT id, name, email, role, status, invite_expires_at
+       FROM   users
+       WHERE  invite_token = $1 AND role = 'farmer'`,
+      [token]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Invite link is invalid or has already been used.' });
+    }
+
+    const farmer = rows[0];
+
+    if (farmer.status !== 'pending') {
+      return res.status(410).json({ error: 'This invite has already been accepted.' });
+    }
+
+    if (new Date(farmer.invite_expires_at) < new Date()) {
+      return res.status(410).json({ error: 'This invite link has expired.' });
+    }
+
+    const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const { rows: updated } = await query(
+      `UPDATE users
+       SET password_hash      = $1,
+           status             = 'active',
+           invite_token       = NULL,
+           invite_expires_at  = NULL
+       WHERE id = $2
+       RETURNING id, name, email, role`,
+      [password_hash, farmer.id]
+    );
+
+    const user  = updated[0];
+    const jwtToken = signToken(user);
+
+    return res.json({
+      message: 'Account activated! Welcome to AgriSense.',
+      token:   jwtToken,
+      user:    { id: user.id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────────────────────
+//  GET /api/auth/join/:token
+//  Public — validates a supervisor's shareable invite token.
+//  Returns the supervisor's name so the page can greet the farmer.
+// ─────────────────────────────────────────────────────────────
+router.get('/join/:token', async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { rows } = await query(
+      `SELECT id, name FROM users
+       WHERE supervisor_link_token = $1 AND role = 'supervisor'`,
+      [token]
+    );
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Invite link is invalid. Please ask your supervisor for a new one.' });
+    }
+    return res.json({ supervisor_name: rows[0].name });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────────────────────
+//  POST /api/auth/join
+//  Public — farmer self-registers via supervisor's invite link.
+//  Body: { supervisorToken, name, email, password }
+// ─────────────────────────────────────────────────────────────
+router.post('/join', async (req, res, next) => {
+  try {
+    const { supervisorToken, name, email, password } = req.body;
+
+    if (!supervisorToken || !name?.trim() || !email?.trim() || !password) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    }
+
+    // Validate supervisor token
+    const supResult = await query(
+      `SELECT id FROM users WHERE supervisor_link_token = $1 AND role = 'supervisor'`,
+      [supervisorToken]
+    );
+    if (!supResult.rows.length) {
+      return res.status(404).json({ error: 'Invite link is invalid. Please ask your supervisor for a new one.' });
+    }
+    const supervisorId = supResult.rows[0].id;
+
+    // Check email not already taken
+    const normalEmail = email.toLowerCase().trim();
+    const existing = await query(
+      `SELECT id FROM users WHERE email = $1`,
+      [normalEmail]
+    );
+    if (existing.rows.length) {
+      return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
+    }
+
+    const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const { rows } = await query(
+      `INSERT INTO users (name, email, password_hash, role, supervisor_id, status)
+       VALUES ($1, $2, $3, 'farmer', $4, 'active')
+       RETURNING id, name, email, role`,
+      [name.trim(), normalEmail, password_hash, supervisorId]
+    );
+
+    const user     = rows[0];
+    const token    = signToken(user);
+
+    return res.status(201).json({
+      message: 'Account created! Welcome to AgriSense.',
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (err) { next(err); }
+});
+
+module.exports = router;

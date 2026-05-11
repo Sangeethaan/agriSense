@@ -1,18 +1,21 @@
 require('dotenv').config();
-const express  = require('express');
-const cors     = require('cors');
-const helmet   = require('helmet');
-const morgan   = require('morgan');
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
 const passport = require('./config/passport'); // initialises the Google Strategy
 
 // ── Route imports ────────────────────────────────────────────
-const authRoutes    = require('./routes/auth');
-const farmRoutes    = require('./routes/farms');
-const farmersRoutes = require('./routes/farmers');
-const sarvamRoutes  = require('./routes/sarvam');
+const authRoutes       = require('./routes/auth');
+const farmRoutes       = require('./routes/farms');
+const farmersRoutes    = require('./routes/farmers');
+const supervisorRoutes = require('./routes/supervisor');
+const visitsRoutes     = require('./routes/visits');
+const sarvamRoutes     = require('./routes/sarvam');
+const farmerRoutes     = require('./routes/farmer');
+const managerRoutes    = require('./routes/manager');
 
-
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Global middleware ─────────────────────────────────────────
@@ -37,10 +40,14 @@ app.get('/health', (_req, res) => {
 });
 
 // ── API routes ────────────────────────────────────────────────
-app.use('/api/auth',    authRoutes);
-app.use('/api/farms',   farmRoutes);
-app.use('/api/farmers', farmersRoutes);
-app.use('/api/sarvam',  sarvamRoutes);
+app.use('/api/auth',       authRoutes);
+app.use('/api/farms',      farmRoutes);
+app.use('/api/farmers',    farmersRoutes);
+app.use('/api/supervisor', supervisorRoutes);
+app.use('/api/visits',     visitsRoutes);
+app.use('/api/sarvam',     sarvamRoutes);
+app.use('/api/farmer',    farmerRoutes);
+app.use('/api/manager',   managerRoutes);
 
 
 // ── 404 handler ───────────────────────────────────────────────

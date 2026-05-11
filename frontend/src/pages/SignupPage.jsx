@@ -46,17 +46,6 @@ const EyeIcon = ({ open }) => open ? (
 // ── Role data with SVG icons ─────────────────────────────────
 const ROLES = [
   {
-    value: 'farmer',
-    label: 'Farmer',
-    desc: 'I grow crops and manage my farm',
-    icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#217a4a' : '#8fa99a'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2a9 9 0 0 0-9 9c0 4 2.5 7 6 8.5V22h6v-2.5C18.5 18 21 15 21 11a9 9 0 0 0-9-9z"/>
-        <path d="M12 6v6M9 9l3-3 3 3"/>
-      </svg>
-    ),
-  },
-  {
     value: 'supervisor',
     label: 'Supervisor',
     desc: 'I conduct field visits and audit farms',
@@ -80,53 +69,6 @@ const ROLES = [
     ),
   },
 ];
-
-// ── Sidebar (shared w/ Login) ─────────────────────────────────
-function Sidebar() {
-  return (
-    <aside className="auth-sidebar">
-      <div className="sb-orb sb-orb-1" />
-      <div className="sb-orb sb-orb-2" />
-      <div className="sb-orb sb-orb-3" />
-      <div className="sb-orb sb-orb-4" />
-
-      <div className="sb-content">
-        <div className="sb-logo">
-          <div className="sb-logo-mark">
-            <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-              <path d="M16 3C10.5 3 5 8 5 14c0 4 2 7.5 5.5 9.5L12 28h8l1.5-4.5C25 21.5 27 18 27 14c0-6-5.5-11-11-11z" fill="rgba(255,255,255,.9)"/>
-              <path d="M16 8v10M12.5 12l3.5-4 3.5 4" stroke="rgba(14,67,42,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="sb-logo-text">AgriSense</span>
-        </div>
-
-        <h2 className="sb-headline">
-          Join the future<br />of <em>smart farming.</em>
-        </h2>
-        <p className="sb-sub">
-          AI-Powered Field Conversation Intelligence — capture farm visits, transcribe field notes, and generate reports across 12 Indian languages.
-        </p>
-
-        <div className="sb-stats">
-          {[
-            { icon: '🌿', label: 'Active Farms',  value: '1,200+'  },
-            { icon: '📊', label: 'Reports / Day', value: '400+'    },
-            { icon: '⚡',  label: 'Report Speed', value: '< 60 sec' },
-          ].map(s => (
-            <div className="sb-stat" key={s.label}>
-              <div className="sb-stat-icon">{s.icon}</div>
-              <div>
-                <div className="sb-stat-label">{s.label}</div>
-                <div className="sb-stat-value">{s.value}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </aside>
-  );
-}
 
 // ── SignupPage ────────────────────────────────────────────────
 export default function SignupPage() {
@@ -170,9 +112,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="auth-root">
-      <Sidebar />
-
+    <div className="auth-root auth-root--solo">
       <main className="auth-panel">
         <div className="auth-card">
           <span className="auth-eyebrow">
