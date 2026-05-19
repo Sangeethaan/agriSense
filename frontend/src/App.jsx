@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider }    from './context/AuthContext';
 import ProtectedRoute      from './components/ProtectedRoute';
 import LandingPage         from './pages/LandingPage';
@@ -13,6 +13,18 @@ import FarmerProfilePage   from './pages/supervisor/FarmerProfilePage';
 import FarmDetailPage      from './pages/supervisor/FarmDetailPage';
 import FarmerDashboard     from './pages/farmer/FarmerDashboard';
 import ManagerDashboard    from './pages/manager/ManagerDashboard';
+import SmartChatWidget     from './components/SmartChatWidget';
+
+function GlobalChat() {
+  const location = useLocation();
+  const hiddenRoutes = ['/', '/login', '/signup', '/auth/callback', '/invite'];
+  
+  if (hiddenRoutes.includes(location.pathname)) {
+    return null;
+  }
+  
+  return <SmartChatWidget />;
+}
 
 export default function App() {
   return (
@@ -90,6 +102,7 @@ export default function App() {
           {/* ── Fallback ────────────────────────────────── */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <GlobalChat />
       </AuthProvider>
     </BrowserRouter>
   );

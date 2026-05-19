@@ -150,12 +150,10 @@ async function sendChunkToSarvam(buffer, filename, languageCode, apiKey) {
     throw new Error(msg);
   }
 
-  return (
-    response.data?.translated_text ??
-    response.data?.transcript       ??
-    response.data?.text             ??
-    ''
-  );
+  return {
+    text: response.data?.translated_text ?? response.data?.transcript ?? response.data?.text ?? '',
+    languageCode: response.data?.language_code ?? 'unknown'
+  };
 }
 
 /**
@@ -169,7 +167,7 @@ async function sendChunkToSarvam(buffer, filename, languageCode, apiKey) {
  * @param {Buffer|import('stream').Readable|string} audioInput
  * @param {string} originalFilename
  * @param {string} sourceLanguageCode  BCP-47, e.g. 'kn-IN'
- * @returns {Promise<string>}  English transcript
+ * @returns {Promise<{text: string, languageCode: string}>}  English transcript and detected language code
  */
 async function transcribeBuffer(audioInput, originalFilename = 'audio.mp3', sourceLanguageCode = 'unknown') {
   const apiKey = process.env.SARVAM_API_KEY;
@@ -199,7 +197,8 @@ async function transcribeBuffer(audioInput, originalFilename = 'audio.mp3', sour
     );
   }
 
-  let transcript;
+  let transcript = '';
+  let finalLanguageCode = 'unknown';
 
   if (duration > 0 && duration > CHUNK_SECS) {
     // ── Long audio: split into chunks ──────────────────────────────
@@ -227,22 +226,30 @@ async function transcribeBuffer(audioInput, originalFilename = 'audio.mp3', sour
       fs.unlinkSync(chunkPath);
 
       console.log(`[sarvamSTT] Sending chunk ${i + 1}/${numChunks} (start=${startSec}s)`);
-      const chunkText = await sendChunkToSarvam(
+      const chunkResult = await sendChunkToSarvam(
         chunkBuffer, `chunk-${i}.wav`, sourceLanguageCode, apiKey
       );
-      if (chunkText.trim()) transcripts.push(chunkText.trim());
+      if (chunkResult.text.trim()) transcripts.push(chunkResult.text.trim());
+      if (i === 0 && chunkResult.languageCode && chunkResult.languageCode !== 'unknown') {
+        finalLanguageCode = chunkResult.languageCode;
+      }
     }
 
     transcript = transcripts.join(' ');
   } else {
     // ── Short audio: send directly ─────────────────────────────────
-    transcript = await sendChunkToSarvam(audioData, originalFilename, sourceLanguageCode, apiKey);
+    const result = await sendChunkToSarvam(audioData, originalFilename, sourceLanguageCode, apiKey);
+    transcript = result.text;
+    finalLanguageCode = result.languageCode;
   }
 
   // Clean up temp input file
   try { fs.unlinkSync(inputPath); } catch { /* already gone */ }
 
-  return transcript;
+  return { 
+    text: transcript, 
+    languageCode: finalLanguageCode && finalLanguageCode !== 'unknown' ? finalLanguageCode : 'en-IN' 
+  };
 }
 
 module.exports = { transcribeBuffer };

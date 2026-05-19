@@ -480,7 +480,7 @@
 /* ── FAB + Bubble ──────────────────────────────────────────────────────────── */
 .fr-fab-wrap {
   position: fixed;
-  bottom: 30px;
+  bottom: 100px;
   right: 28px;
   display: flex;
   align-items: flex-end;
@@ -573,6 +573,6 @@
   .fr-main        { padding: 16px 14px; }
   .fr-section     { padding: 18px 14px; }
   .fr-fab         { width: 62px; height: 62px; font-size: 1.5rem; }
-  .fr-fab-wrap    { bottom: 22px; right: 18px; }
+  .fr-fab-wrap    { bottom: 95px; right: 18px; }
   .fr-fab-bubble  { font-size: .75rem; }
 }

@@ -14,6 +14,7 @@ const visitsRoutes     = require('./routes/visits');
 const sarvamRoutes     = require('./routes/sarvam');
 const farmerRoutes     = require('./routes/farmer');
 const managerRoutes    = require('./routes/manager');
+const chatRoutes       = require('./routes/chat');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +49,7 @@ app.use('/api/visits',     visitsRoutes);
 app.use('/api/sarvam',     sarvamRoutes);
 app.use('/api/farmer',    farmerRoutes);
 app.use('/api/manager',   managerRoutes);
+app.use('/api/chat',      chatRoutes);
 
 
 // ── 404 handler ───────────────────────────────────────────────
