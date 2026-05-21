@@ -2,12 +2,12 @@ import { useState } from 'react';
 import '../../supervisor.css';
 
 const CATEGORY_META = {
-  'Irrigation':   { emoji: '💧', cls: 'sup-badge-irrigation'  },
-  'Pesticide':    { emoji: '🧪', cls: 'sup-badge-pesticide'   },
-  'Crop Health':  { emoji: '🌿', cls: 'sup-badge-crop-health' },
-  'Fertilizer':   { emoji: '🌱', cls: 'sup-badge-fertilizer'  },
-  'General':      { emoji: '📋', cls: 'sup-badge-general'     },
-  'Farmer Note':  { emoji: '🚨', cls: 'sup-badge-farmer-note' },
+  'Irrigation':   { emoji: '', cls: 'sup-badge-irrigation'  },
+  'Pesticide':    { emoji: '', cls: 'sup-badge-pesticide'   },
+  'Crop Health':  { emoji: '', cls: 'sup-badge-crop-health' },
+  'Fertilizer':   { emoji: '', cls: 'sup-badge-fertilizer'  },
+  'General':      { emoji: '', cls: 'sup-badge-general'     },
+  'Farmer Note':  { emoji: '', cls: 'sup-badge-farmer-note' },
 };
 
 function formatDate(dateStr) {
@@ -172,7 +172,7 @@ export default function VisitCard({ visit, token, onDelete, readOnly = false }) 
               </button>
             </div>
             {deleteError && (
-              <span style={{ fontSize: '.7rem', color: '#dc2626' }}>⚠️ {deleteError}</span>
+              <span style={{ fontSize: '.7rem', color: '#dc2626' }}>{deleteError}</span>
             )}
           </div>
         )}
@@ -185,7 +185,7 @@ export default function VisitCard({ visit, token, onDelete, readOnly = false }) 
           <span className="sup-tl-date">{formatDate(visit.visit_date)}</span>
           {visit.staff_name && (
             <span className="sup-tl-staff">
-              👤 {visit.staff_name}
+              {visit.staff_name}
             </span>
           )}
         </div>
@@ -202,7 +202,7 @@ export default function VisitCard({ visit, token, onDelete, readOnly = false }) 
             color: '#92400e',
             lineHeight: 1.55,
           }}>
-            <strong>🚨 Farmer-Reported Issue:</strong> {visit.notes}
+            <strong>Farmer-Reported Issue:</strong> {visit.notes}
           </div>
         )}
 
@@ -218,7 +218,7 @@ export default function VisitCard({ visit, token, onDelete, readOnly = false }) 
             color: '#3730a3',
             lineHeight: 1.55,
           }}>
-            <strong>📝 Supervisor Note:</strong> {visit.supervisor_notes}
+            <strong>Supervisor Note:</strong> {visit.supervisor_notes}
           </div>
         )}
 
@@ -236,7 +236,7 @@ export default function VisitCard({ visit, token, onDelete, readOnly = false }) 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <strong style={{ color: 'var(--sup-text)' }}>
-                📝 Transcript
+                Transcript
               </strong>
               <span style={{
                 display: 'inline-flex',
@@ -251,7 +251,7 @@ export default function VisitCard({ visit, token, onDelete, readOnly = false }) 
                 padding: '1px 7px',
                 letterSpacing: '.01em',
               }}>
-                🌐 AI Translated
+                AI Translated
               </span>
             </div>
             {expanded || !isLong

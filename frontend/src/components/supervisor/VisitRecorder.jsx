@@ -54,7 +54,7 @@ function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', confirm
         {/* icon + title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <span style={{ fontSize: '1.4rem' }}>
-            {confirmDanger ? '⚠️' : 'ℹ️'}
+            {confirmDanger ? '!' : 'i'}
           </span>
           <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1a1a1a' }}>
             {title}
@@ -273,7 +273,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
     showConfirm({
       title:        'Discard Visit?',
       message:      'This visit and its transcript will be permanently deleted. This cannot be undone.',
-      confirmLabel: '🗑️ Yes, Discard',
+      confirmLabel: 'Yes, Discard',
       danger:        true,
       onConfirm:    async () => {
         closeConfirm();
@@ -295,7 +295,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
     showConfirm({
       title:        'Re-record Visit?',
       message:      'The current visit and transcript will be deleted, and you can record a new one. Continue?',
-      confirmLabel: '🔄 Yes, Re-record',
+      confirmLabel: 'Yes, Re-record',
       danger:        true,
       onConfirm:    async () => {
         closeConfirm();
@@ -346,7 +346,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
             fontSize: '.8rem', color: '#1d4ed8', fontWeight: 600,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <span>➕ Adding to existing visit — this recording will be appended to the transcript above</span>
+            <span>Adding to existing visit — this recording will be appended to the transcript above</span>
             <button
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1d4ed8', fontSize: '.8rem', marginLeft: 12 }}
               onClick={() => { setAppendMode(false); setStatus('success'); }}
@@ -364,7 +364,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                 htmlFor="supervisor-notes"
                 style={{ fontSize: '.78rem', fontWeight: 600, color: 'var(--sup-text)', letterSpacing: '.02em' }}
               >
-                📝 Supervisor Notes <span style={{ fontWeight: 400, color: 'var(--sup-muted)' }}>(optional)</span>
+                Supervisor Notes <span style={{ fontWeight: 400, color: 'var(--sup-muted)' }}>(optional)</span>
               </label>
               <textarea
                 id="supervisor-notes"
@@ -386,7 +386,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
             <div className="sup-action-btns">
               {status === 'idle' ? (
                 <button id="btn-record-audio" className="sup-btn sup-btn-primary" onClick={startRecording}>
-                  🎙️ Record Audio
+                  Record Audio
                 </button>
               ) : (
                 <button
@@ -416,7 +416,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                   opacity: status === 'recording' ? 0.45 : 1,
                 }}
               >
-                <div style={{ fontSize: '1.2rem', marginBottom: 2 }}>📁</div>
+                <div style={{ fontSize: '1.2rem', marginBottom: 2 }}></div>
                 <div style={{ fontSize: '.78rem', fontWeight: 600, color: 'var(--sup-text)', marginBottom: 1 }}>
                   {isDragOver ? 'Drop your audio file here!' : 'Upload Audio File'}
                 </div>
@@ -475,7 +475,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
         {status === 'error' && (
           <div>
             <div className="sup-alert sup-alert-error" style={{ marginBottom: 10 }}>
-              ⚠️ {errorMsg}
+              ! {errorMsg}
             </div>
             <button className="sup-btn sup-btn-ghost sup-btn-sm" onClick={resetRecorder}>
               ↩ Try Again
@@ -495,7 +495,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                 width: 28, height: 28, borderRadius: '50%', background: '#22c55e',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '.9rem', flexShrink: 0, boxShadow: '0 2px 8px rgba(34,197,94,.35)',
-              }}>✓</span>
+              }}></span>
               <span style={{ fontWeight: 700, color: '#14532d', fontSize: '.95rem' }}>
                 Visit recorded successfully!
               </span>
@@ -513,7 +513,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                 lineHeight: 1.6, marginBottom: 14, whiteSpace: 'pre-wrap',
               }}>
                 <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>
-                  📝 Transcript
+                  Transcript
                 </div>
                 {transcript}
               </div>
@@ -529,7 +529,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                 htmlFor="supervisor-notes-review"
                 style={{ fontSize: '.75rem', fontWeight: 700, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.06em' }}
               >
-                📝 Supervisor Notes <span style={{ fontWeight: 400, textTransform: 'none', fontSize: '.72rem', color: 'var(--sup-muted)' }}>(private · optional)</span>
+                Supervisor Notes <span style={{ fontWeight: 400, textTransform: 'none', fontSize: '.72rem', color: 'var(--sup-muted)' }}>(private · optional)</span>
               </label>
               <textarea
                 id="supervisor-notes-review"
@@ -556,7 +556,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                 className="sup-btn sup-btn-primary"
                 onClick={handleAddMore}
               >
-                ➕ Add More Audio
+                Add More Audio
               </button>
               <button
                 id="btn-re-record"
@@ -564,7 +564,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                 style={{ color: '#d97706', borderColor: '#fde68a' }}
                 onClick={handleReRecord}
               >
-                🔄 Re-record
+                Re-record
               </button>
               <button
                 id="btn-discard-visit"
@@ -573,7 +573,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                 onClick={handleDiscard}
                 disabled={isDiscarding}
               >
-                {isDiscarding ? '⏳ Discarding…' : '🗑️ Discard Visit'}
+                {isDiscarding ? 'Discarding…' : 'Discard Visit'}
               </button>
               {/* Save & Close — persists any review-time notes then adds to timeline */}
               <button
@@ -598,7 +598,7 @@ export default function VisitRecorder({ farmId, farmerId, token, onSuccess, onDe
                   resetRecorder();
                 }}
               >
-                ✅ Save & Close
+                Save & Close
               </button>
             </div>
           </div>

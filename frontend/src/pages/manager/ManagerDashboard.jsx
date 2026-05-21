@@ -30,7 +30,7 @@ function ManagerNav({ user, logout }) {
     <header className="mg-header">
       <div className="mg-header-inner">
         <div className="mg-header-left">
-          <div className="mg-logo-mark">🌾</div>
+          <div class="mg-logo-mark"><svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M3 21h18M9 21V11l3-3 3 3v10M5 21V13l-2 2M19 21V13l2 2" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
           <div>
             <div className="mg-logo-text">AgriSense</div>
             <div className="mg-portal-badge">Manager Portal</div>
@@ -109,14 +109,14 @@ function FarmCard({ farm, onClick, token }) {
 
       <div className="mg-farm-meta">
         <span className="mg-farm-meta-row">
-          <span className="mg-meta-icon">👤</span>
+          <span class="mg-meta-icon"><svg viewBox="0 0 24 24" fill="none" width="14" height="14"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>
           {farm.farmer_name}
           {farm.farmer_village && (
             <span className="mg-meta-muted"> · {farm.farmer_village}</span>
           )}
         </span>
         <span className="mg-farm-meta-row">
-          <span className="mg-meta-icon">🧑‍💼</span>
+          <span class="mg-meta-icon"><svg viewBox="0 0 24 24" fill="none" width="14" height="14"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>
           {farm.supervisor_name
             ? farm.supervisor_name
             : <em className="mg-meta-muted">Unassigned</em>
@@ -126,11 +126,11 @@ function FarmCard({ farm, onClick, token }) {
 
       <div className="mg-farm-footer">
         <span className="mg-visit-label">
-          🕐 {daysAgoLabel(farm.days_since_visit)}
+          {daysAgoLabel(farm.days_since_visit)}
         </span>
         {farm.risk_count > 0 && (
           <span className="mg-risk-chip">
-            ⚠ {farm.risk_count} risk{farm.risk_count > 1 ? 's' : ''}
+            {farm.risk_count} risk{farm.risk_count > 1 ? 's' : ''}
           </span>
         )}
         {farm.health_tier === 'yellow' && farm.task_count > 0 && farm.risk_count === 0 && (
@@ -156,7 +156,7 @@ function FarmCard({ farm, onClick, token }) {
             pointerEvents: farm.has_saved_report ? 'auto' : 'none',
           }}
         >
-          {downloadingPdf ? '⏳' : farm.has_saved_report ? '📄 Report' : '📄 No report'}
+          {downloadingPdf ? 'Loading…' : farm.has_saved_report ? 'Report' : 'No report'}
         </button>
       </div>
     </div>
@@ -188,16 +188,16 @@ function AuditCard({ audit, followed, onFollowUp }) {
       </div>
 
       <div className="mg-audit-people">
-        <span className="mg-audit-person mg-audit-farmer">👤 {audit.farmer_name}</span>
+        <span className="mg-audit-person mg-audit-farmer">{audit.farmer_name}</span>
         <button
           className="mg-audit-person mg-audit-supervisor"
           onClick={() => onFollowUp(audit)}
           title="Mark follow-up reminder"
         >
-          🧑‍💼 {audit.supervisor_name}
+          {audit.supervisor_name}
           <span className="mg-sup-arrow">↗</span>
         </button>
-        {followed && <span className="mg-follow-toast">✓ Noted</span>}
+        {followed && <span className="mg-follow-toast">Noted</span>}
       </div>
 
       {/* SQL-derived oversight line (factual, no AI) */}
@@ -211,7 +211,7 @@ function AuditCard({ audit, followed, onFollowUp }) {
         marginTop: 6,
         lineHeight: 1.5,
       }}>
-        <span style={{ fontWeight: 600 }}>🕐 {daysLabel}</span>
+        <span style={{ fontWeight: 600 }}>{daysLabel}</span>
         {taskPct !== null && (
           <>
             {' · '}
@@ -227,7 +227,7 @@ function AuditCard({ audit, followed, onFollowUp }) {
 
       {audit.situation && (
         <div className="mg-audit-situation">
-          <span className="mg-situation-icon">⚠</span>
+          <span className="mg-situation-icon">!</span>
           <span>{audit.situation}</span>
         </div>
       )}
@@ -289,7 +289,7 @@ function BriefingPanel({ token }) {
       {/* ── Section header ── */}
       <div className="mg-report-header">
         <div className="mg-report-title-block">
-          <span className="mg-report-icon">🗂️</span>
+          <span className="mg-report-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>
           <div>
             <div className="mg-report-title">Operations Audit</div>
             <div className="mg-report-sub">{timeLabel}</div>
@@ -303,28 +303,28 @@ function BriefingPanel({ token }) {
           {loading
             ? <><span className="mg-btn-spinner" /> Analyzing…</>
             : briefing
-              ? '🔄 Regenerate Report'
-              : '✨ Generate AI Report'}
+              ? 'Regenerate Report'
+              : 'Generate AI Report'}
         </button>
       </div>
 
       {/* ── Loading ── */}
       {loading && (
         <div className="mg-report-loading">
-          <span className="mg-spinner">🌱</span>
+          <span style={{display:"inline-block",width:16,height:16,border:"2px solid #22c55e",borderTopColor:"transparent",borderRadius:"50%",animation:"spin .7s linear infinite"}}></span>
           <span>Analyzing supervisor &amp; farmer activity across all farms…</span>
         </div>
       )}
 
       {/* ── Error ── */}
       {error && !loading && (
-        <div className="mg-report-error">⚠ {error}</div>
+        <div className="mg-report-error">{error}</div>
       )}
 
       {/* ── Placeholder ── */}
       {!loading && !briefing && !error && (
         <div className="mg-report-placeholder">
-          <div className="mg-placeholder-icon">🗂️</div>
+          <div className="mg-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
           <p>Generate the audit to see a structured accountability breakdown — who visited, what was flagged, and what action each farm needs.</p>
         </div>
       )}
@@ -335,7 +335,7 @@ function BriefingPanel({ token }) {
 
           {briefing.audits?.length === 0 ? (
             <div className="mg-report-all-clear">
-              <span>✅</span>
+              
               <span>No farms need immediate attention. Portfolio is healthy.</span>
             </div>
           ) : (
@@ -345,12 +345,12 @@ function BriefingPanel({ token }) {
                 <span className="mg-summary-total">{briefing.audits.length} farms flagged</span>
                 {redAudits.length > 0 && (
                   <span className="mg-summary-chip mg-summary-red">
-                    🔴 {redAudits.length} Critical
+                    {redAudits.length} Critical
                   </span>
                 )}
                 {yellowAudits.length > 0 && (
                   <span className="mg-summary-chip mg-summary-yellow">
-                    🟡 {yellowAudits.length} Attention
+                    {yellowAudits.length} Attention
                   </span>
                 )}
               </div>
@@ -456,13 +456,13 @@ export default function ManagerDashboard() {
 
         {loading && (
           <div className="mg-loading">
-            <span className="mg-spinner">🌱</span>
+            <span style={{display:"inline-block",width:16,height:16,border:"2px solid #22c55e",borderTopColor:"transparent",borderRadius:"50%",animation:"spin .7s linear infinite"}}></span>
             <span>Loading portfolio…</span>
           </div>
         )}
 
         {error && !loading && (
-          <div className="mg-alert mg-alert-error">⚠️ {error}</div>
+          <div className="mg-alert mg-alert-error"> {error}</div>
         )}
 
         {portfolio && !loading && (
@@ -514,14 +514,14 @@ export default function ManagerDashboard() {
                     className="mg-clear-filter"
                     onClick={() => setFilter('all')}
                   >
-                    ✕ Clear filter
+                    Clear filter
                   </button>
                 )}
               </div>
 
               {visibleFarms.length === 0 ? (
                 <div className="mg-empty">
-                  <div className="mg-empty-icon">🌿</div>
+                  <div className="mg-empty-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" fill="#4ade80" opacity=".25"/><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" stroke="#22c55e" strokeWidth="1.5" strokeLinejoin="round"/><path d="M12 20V10" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
                   <div className="mg-empty-msg">No farms in this category</div>
                 </div>
               ) : (

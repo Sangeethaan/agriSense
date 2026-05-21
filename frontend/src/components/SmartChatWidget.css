@@ -28,8 +28,8 @@
 }
 
 .chat-window {
-  width: 350px;
-  height: 500px;
+  width: 480px;
+  height: 550px;
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -169,52 +169,81 @@
 }
 
 .small-mic-btn {
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
+  background: #f0fdf4;
+  border: 1.5px solid #6ee7b7;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
   user-select: none;
+  flex-shrink: 0;
+}
+
+.small-mic-btn:hover {
+  background: #d1fae5;
+  border-color: #059669;
+  transform: scale(1.08);
 }
 
 .small-mic-btn.recording {
   background: #fee2e2;
   border-color: #ef4444;
-  color: #ef4444;
+  animation: pulse-red 1s infinite;
 }
 
-.text-input-form input {
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
+
+
+.text-input-form textarea {
   flex: 1;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border: 1px solid #d1d5db;
   border-radius: 20px;
   font-size: 14px;
   outline: none;
+  resize: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  overflow-y: auto;
+  line-height: 1.4;
+  min-height: 38px;
+  max-height: 120px;
+  height: 38px;
 }
 
-.text-input-form input:focus {
+.text-input-form textarea:focus {
   border-color: #10b981;
 }
 
-.text-input-form button[type="submit"] {
-  background: #10b981;
+.send-btn {
+  background: #059669;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
 }
 
-.text-input-form button[type="submit"]:disabled {
+.send-btn:hover:not(:disabled) {
+  background: #047857;
+  transform: scale(1.08);
+}
+
+.send-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
+  transform: none;
 }

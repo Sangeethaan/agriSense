@@ -47,7 +47,7 @@ router.post('/ask', authenticate, upload.single('audio'), async (req, res, next)
       }
     }
 
-    return res.json({ reply, source, audioBase64 });
+    return res.json({ queryText, reply, source, audioBase64 });
   } catch (err) {
     next(err);
   }

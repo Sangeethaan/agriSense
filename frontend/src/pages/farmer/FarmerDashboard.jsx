@@ -65,7 +65,7 @@ function ActionCenter({ nextSteps, completedTasks, farmId, token, onToggle }) {
   if (!nextSteps?.length) {
     return (
       <div className="fr-empty-state">
-        <div className="fr-empty-icon">📋</div>
+        <div className="fr-empty-icon"></div>
         <div className="fr-empty-msg">No tasks yet.</div>
         <div className="fr-empty-sub">Your supervisor will assign actions after the next visit.</div>
       </div>
@@ -114,7 +114,7 @@ function VisitTimeline({ visits }) {
   if (!visits?.length) {
     return (
       <div className="fr-empty-state">
-        <div className="fr-empty-icon">🌾</div>
+        <div className="fr-empty-icon"></div>
         <div className="fr-empty-msg">No visits yet</div>
         <div className="fr-empty-sub">Field visits will appear here after your supervisor records them.</div>
       </div>
@@ -155,7 +155,7 @@ function VisitTimeline({ visits }) {
                 )}
               </div>
               <div className="fr-timeline-title" style={isFarmerNote ? { color: '#d97706' } : {}}>
-                {isFarmerNote ? '🚨 ' : ''}{v.category || 'General Visit'}
+                {isFarmerNote ? '' : ''}{v.category || 'General Visit'}
               </div>
               <div className="fr-timeline-summary">
                 {isExpanded ? fullText : summary}{!isExpanded && isLong ? '…' : ''}
@@ -231,7 +231,7 @@ function ReportIssueModal({ farmId, token, onClose, onSubmitted }) {
           borderBottom: '1px solid #f0f0f0',
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
-          <span style={{ fontSize: '1.3rem' }}>🚨</span>
+          <span style={{ fontSize: '1.3rem' }}></span>
           <div>
             <div style={{ fontWeight: 700, fontSize: '.95rem', color: '#1a1a1a' }}>Report an Issue</div>
             <div style={{ fontSize: '.76rem', color: '#888' }}>Your supervisor will see this at their next review</div>
@@ -242,7 +242,7 @@ function ReportIssueModal({ farmId, token, onClose, onSubmitted }) {
               marginLeft: 'auto', background: 'none', border: 'none',
               fontSize: '1.1rem', cursor: 'pointer', color: '#aaa',
             }}
-          >✕</button>
+          >×</button>
         </div>
 
         {/* Body */}
@@ -252,7 +252,7 @@ function ReportIssueModal({ farmId, token, onClose, onSubmitted }) {
               <div style={{
                 background: '#fff5f5', color: '#dc2626', border: '1px solid #fecaca',
                 borderRadius: 8, padding: '8px 12px', fontSize: '.8rem', marginBottom: 12,
-              }}>⚠️ {error}</div>
+              }}> {error}</div>
             )}
             <textarea
               placeholder="Describe what you're seeing — new pest, sudden wilting, weather damage, equipment issue…"
@@ -297,7 +297,7 @@ function ReportIssueModal({ farmId, token, onClose, onSubmitted }) {
                 opacity: saving || !message.trim() ? 0.6 : 1,
                 boxShadow: '0 2px 8px rgba(217,119,6,.3)',
               }}
-            >{saving ? 'Sending…' : '🚨 Submit Issue'}</button>
+            >{saving ? 'Sending…' : 'Submit Issue'}</button>
           </div>
         </form>
       </div>
@@ -388,7 +388,7 @@ export default function FarmerDashboard() {
             <Avatar name={user?.name} />
             <div>
               <div className="fr-greeting">
-                Namaste, {user?.name?.split(' ')[0] || 'Farmer'}! 🌿
+                Welcome, {user?.name?.split(' ')[0] || 'Farmer'}!
               </div>
               <div className="fr-farm-name">
                 {data?.farm?.name || 'Your Farm'} · {data?.farm?.location || 'AgriSense'}
@@ -433,7 +433,7 @@ export default function FarmerDashboard() {
 
         {loading && !data && (
           <div className="fr-loading">
-            <span className="fr-spinner">🌱</span>
+            <span className="fr-spinner"></span>
             <span>Loading your farm…</span>
           </div>
         )}
@@ -484,7 +484,7 @@ export default function FarmerDashboard() {
                     borderRadius: 12, padding: '14px 16px',
                   }}>
                     <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#166534', marginBottom: 4 }}>
-                      📄 Report #{savedReport.report_number}
+                      Report #{savedReport.report_number}
                     </div>
                     <div style={{ fontSize: '.72rem', color: '#6b7280', marginBottom: 10 }}>
                       {savedReport.visit_count} visit{savedReport.visit_count !== 1 ? 's' : ''} · {' '}
@@ -502,7 +502,7 @@ export default function FarmerDashboard() {
                         opacity: downloadingPdf ? 0.7 : 1,
                       }}
                     >
-                      {downloadingPdf ? '⏳ Preparing…' : '📥 Download PDF'}
+                      {downloadingPdf ? 'Preparing…' : 'Download PDF'}
                     </button>
                   </div>
                 ) : (
@@ -533,7 +533,7 @@ export default function FarmerDashboard() {
               boxShadow: '0 4px 20px rgba(217,119,6,.4)',
             }}
           >
-            🚨
+            
           </button>
         </div>
       )}

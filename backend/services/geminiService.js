@@ -10,6 +10,78 @@ function stripMarkdown(raw) {
 }
 
 /**
+ * Parses multiple JSON objects concatenated together (e.g. "{a:1} {b:2}")
+ * or simply extracts valid JSON objects from a text stream.
+ */
+function parseAllJsonObjects(str) {
+  const objects = [];
+  let braceCount = 0;
+  let startIdx = -1;
+  
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '{') {
+      if (braceCount === 0) {
+        startIdx = i;
+      }
+      braceCount++;
+    } else if (str[i] === '}') {
+      braceCount--;
+      if (braceCount === 0 && startIdx !== -1) {
+        const candidate = str.slice(startIdx, i + 1);
+        try {
+          objects.push(JSON.parse(candidate));
+        } catch (e) {
+          // ignore invalid partial JSON
+        }
+        startIdx = -1;
+      }
+    }
+  }
+  return objects;
+}
+
+/**
+ * Consolidates an array of report objects (or a single object)
+ * into a single unified report object.
+ */
+function consolidateReports(parsed) {
+  if (!parsed || parsed.length === 0) {
+    return { current_health: '', risks: [], supervisor_instructions: [] };
+  }
+  
+  if (parsed.length === 1) {
+    return parsed[0];
+  }
+  
+  const currentHealthParts = [];
+  const risksSet = new Set();
+  const instructionsSet = new Set();
+  
+  for (const obj of parsed) {
+    const health = obj.current_health || obj.health_status;
+    if (health) {
+      currentHealthParts.push(health);
+    }
+    
+    const risks = obj.risks || [];
+    if (Array.isArray(risks)) {
+      risks.forEach(r => risksSet.add(r));
+    }
+    
+    const instructions = obj.supervisor_instructions || obj.next_steps || [];
+    if (Array.isArray(instructions)) {
+      instructions.forEach(s => instructionsSet.add(s));
+    }
+  }
+  
+  return {
+    current_health: currentHealthParts.join('\n'),
+    risks: Array.from(risksSet),
+    supervisor_instructions: Array.from(instructionsSet)
+  };
+}
+
+/**
  * Call Gemini with retry + model fallback.
  * Tries the primary model up to MAX_RETRIES times with exponential backoff.
  * If all attempts fail with a 503 / transient error, falls back to a
@@ -174,18 +246,21 @@ async function generateMasterReport(farmId) {
 
   let report;
   try {
-    report = JSON.parse(clean);
+    const parsed = JSON.parse(clean);
+    if (Array.isArray(parsed)) {
+      report = consolidateReports(parsed);
+    } else {
+      report = parsed;
+    }
   } catch {
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (match) {
-      try { report = JSON.parse(match[0]); }
-      catch { report = { current_health: clean.slice(0, 600), risks: [], supervisor_instructions: [] }; }
+    const parsedObjects = parseAllJsonObjects(clean);
+    if (parsedObjects.length > 0) {
+      report = consolidateReports(parsedObjects);
     } else {
       report = { current_health: clean.slice(0, 600), risks: [], supervisor_instructions: [] };
     }
   }
 
-  // ── 6. Normalise + back-compat migration ─────────────────────────────────
   if (!Array.isArray(report.risks))                  report.risks                  = [];
   if (!Array.isArray(report.supervisor_instructions)) report.supervisor_instructions = [];
   // If the AI returned the legacy key, migrate it once
@@ -373,7 +448,20 @@ async function generateIncrementalReport(farmId) {
     visits = rows.reverse(); // oldest-first for context
   }
 
-  if (!visits.length) return null;
+  if (!visits.length) {
+    if (priorSaved) {
+      return {
+        report:              priorSaved.content,
+        mode:                'unchanged',
+        newVisits:           [],
+        lastVisitId:         priorSaved.last_visit_id,
+        visitCount:          0,
+        hasPriorSavedReport: true,
+        priorReportNumber:   priorSaved.report_number,
+      };
+    }
+    return null;
+  }
 
   // ── 3. Determine the last visit ID (our new cursor if saved) ─────────────
   const lastVisit = visits[visits.length - 1];
@@ -496,18 +584,21 @@ async function generateIncrementalReport(farmId) {
 
   let report;
   try {
-    report = JSON.parse(clean);
+    const parsed = JSON.parse(clean);
+    if (Array.isArray(parsed)) {
+      report = consolidateReports(parsed);
+    } else {
+      report = parsed;
+    }
   } catch {
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (match) {
-      try { report = JSON.parse(match[0]); }
-      catch { report = { current_health: clean.slice(0, 600), risks: [], supervisor_instructions: [] }; }
+    const parsedObjects = parseAllJsonObjects(clean);
+    if (parsedObjects.length > 0) {
+      report = consolidateReports(parsedObjects);
     } else {
       report = { current_health: clean.slice(0, 600), risks: [], supervisor_instructions: [] };
     }
   }
 
-  // ── 7. Normalise ──────────────────────────────────────────────────────────
   if (!Array.isArray(report.risks))                   report.risks                  = [];
   if (!Array.isArray(report.supervisor_instructions)) report.supervisor_instructions = [];
   if (!report.supervisor_instructions.length && Array.isArray(report.next_steps)) {

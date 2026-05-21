@@ -52,9 +52,10 @@ export default function FarmDetailPage() {
   const [report,       setReport]       = useState(null);
   const [generating,   setGenerating]   = useState(false);
   const [genError,     setGenError]     = useState(null);
-  const [aiAdvice,     setAiAdvice]     = useState(null);     // consultant mode
+  const [aiAdvice,     setAiAdvice]     = useState(null);
   const [consulting,   setConsulting]   = useState(false);
   const [consultErr,   setConsultErr]   = useState(null);
+  const [activeTab,    setActiveTab]    = useState(isManager ? 'report' : 'record'); // 'record' | 'report' | 'history' | 'saved'
   // ── Report pipeline state ─────────────────────────────────────
   const [draftReport,  setDraftReport]  = useState(null);
   const [draftMeta,    setDraftMeta]    = useState(null);
@@ -63,7 +64,7 @@ export default function FarmDetailPage() {
   const [saveError,    setSaveError]    = useState(null);
   const [saveSuccess,  setSaveSuccess]  = useState(null);
   const [savedReports, setSavedReports] = useState([]);
-  const [showOlder,    setShowOlder]    = useState(false);    // collapse older reports
+  const [showOlder,    setShowOlder]    = useState(false);
   const [loadingPdf,   setLoadingPdf]   = useState(false);
 
   // Called by VisitRecorder on successful upload → prepend to timeline
@@ -152,9 +153,10 @@ export default function FarmDetailPage() {
 
   // ── Download a saved report as PDF ────────────────────────────
   const downloadSavedReport = useCallback(async (reportId) => {
+    if (!reportId) return;
     setLoadingPdf(true);
     try {
-      const res = await fetch(`${API}/api/farms/${farmId}/saved-reports/latest`, {
+      const res = await fetch(`${API}/api/farms/${farmId}/saved-reports/${reportId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Could not load report data');
@@ -256,6 +258,13 @@ export default function FarmDetailPage() {
     fetchSavedReports();
   }, [farmId, fetchSavedReports]);
 
+  // ── Task progress helpers ─────────────────────────────────────
+  const taskList      = report?.supervisor_instructions ?? report?.next_steps ?? [];
+  const completedList = report?.completed_tasks ?? [];
+  const taskTotal     = taskList.length;
+  const taskDone      = completedList.length;
+  const taskPct       = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0;
+
   return (
     <div className="sup-shell">
       <SupervisorNav
@@ -268,7 +277,7 @@ export default function FarmDetailPage() {
 
       <main className="sup-page">
         {error && (
-          <div className="sup-alert sup-alert-error">⚠️ {error}</div>
+          <div className="sup-alert sup-alert-error">{error}</div>
         )}
 
         {loading && (
@@ -282,545 +291,386 @@ export default function FarmDetailPage() {
 
         {!loading && farm && (
           <>
-            {/* ── Section 1: Living Master Report ─────────── */}
-            <section aria-label="Living Master Report">
-              <div className="sup-master-card sup-card">
-
-                {/* Header row */}
-                <div className="sup-report-header">
-                  <div>
-                    <div className="sup-live-badge">
-                      <span className="sup-live-dot" />
-                      AI · GEMINI
-                    </div>
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--sup-text)', marginBottom: 2 }}>
-                      Living Master Report
-                    </h2>
-                    {report?.updated_at && (
-                      <div className="sup-report-meta">
-                        Last updated {new Date(report.updated_at).toLocaleString('en-IN', {
-                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-                        })}
-                      </div>
+            {/* ── Farm Hero — full-width command banner ─────────── */}
+            <div className="fd-hero">
+              <div className="fd-hero-body">
+                <div className="fd-hero-icon"><svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M3 21h18M9 21V11l3-3 3 3v10M5 21V13l-2 2M19 21V13l2 2" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+                <div>
+                  <div className="fd-hero-eyebrow">Farm Detail</div>
+                  <div className="fd-hero-title">{farm.name}</div>
+                  <div className="fd-hero-meta">
+                    <span className="fd-hero-meta-item">
+                      <span className="fd-hero-meta-icon">👤</span>{farmer?.name}
+                    </span>
+                    {farm.location && (
+                      <span className="fd-hero-meta-item">
+                        <span className="fd-hero-meta-icon">📍</span>{farm.location}
+                      </span>
                     )}
-                    {!report && (
-                      <div className="sup-report-meta">
-                        Auto-compiled from visit transcripts for <strong>{farm.name}</strong>
-                      </div>
+                    {farm.crop_types?.length > 0 && (
+                      <span className="fd-hero-meta-item">
+                        <span className="fd-hero-meta-icon">🌾</span>{farm.crop_types.join(', ')}
+                      </span>
                     )}
-                    {/* Strict-transcript disclaimer */}
-                    <div style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
-                      marginTop: 6, padding: '3px 10px',
-                      background: '#f0fdf4', border: '1px solid #bbf7d0',
-                      borderRadius: 99, fontSize: '.68rem', color: '#166534',
-                      fontWeight: 600, letterSpacing: '.01em',
-                    }}>
-                      🔒 Strictly generated from supervisor transcripts only
-                    </div>
-                  </div>
-                  {!isManager && (
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button
-                        className="sup-btn-regenerate"
-                        onClick={generateDraft}
-                        disabled={generating || visits.length === 0}
-                        title={visits.length === 0 ? 'Add a visit first' : 'Generate a new report draft'}
-                      >
-                        {generating ? '⏳ Generating…' : '📄 Generate Report'}
-                      </button>
-                      <button
-                        className="sup-btn-consult"
-                        onClick={getAIAdvice}
-                        disabled={consulting || visits.length === 0}
-                        title="Get on-demand AI expert suggestions (not stored, not shown to farmer)"
-                      >
-                        {consulting ? '🔬 Analysing…' : '🧠 AI Expert Suggestions'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Error banner */}
-                {genError && (
-                  <div className="sup-alert sup-alert-error" style={{ marginBottom: 16 }}>
-                    ⚠️ {genError}
-                  </div>
-                )}
-
-                {/* Generating state */}
-                {generating && (
-                  <div className="sup-report-generating">
-                    <span className="sup-live-dot" style={{ width: 10, height: 10 }} />
-                    Gemini is analysing visit transcripts…
-                  </div>
-                )}
-
-                {/* Empty state */}
-                {!generating && !report && (
-                  <div style={{
-                    background: 'rgba(245,251,248,.8)',
-                    border: '1px dashed var(--sage-300)',
-                    borderRadius: 10,
-                    padding: '18px 20px',
-                    color: 'var(--sup-muted)',
-                    fontSize: '.84rem',
-                    fontStyle: 'italic',
-                  }}>
-                    📋 {visits.length === 0
-                      ? 'No AI report yet. Document your first visit to generate one.'
-                      : 'No report yet. Click ✨ Regenerate to create one from existing visits.'}
-                  </div>
-                )}
-
-                {/* Report grid */}
-                {!generating && report && (
-                  <div className="sup-report-grid">
-                    <div className="sup-report-section">
-                      <div className="sup-report-section-icon">🌿</div>
-                      <div className="sup-report-section-title">Current Crop Health</div>
-                      <div className="sup-report-section-content">
-                        {safeStr(report.current_health) || <span className="sup-report-no-data">No information provided by supervisor.</span>}
-                      </div>
-                    </div>
-
-                    <div className="sup-report-section">
-                      <div className="sup-report-section-icon">⚠️</div>
-                      <div className="sup-report-section-title">Detected Risks</div>
-                      {report.risks?.length > 0 ? (
-                        <ul className="sup-report-list">
-                          {report.risks.map((risk, i) => <li key={i}>{risk}</li>)}
-                        </ul>
-                      ) : (
-                        <span className="sup-report-no-data">No data reported</span>
-                      )}
-                    </div>
-
-                    <div className="sup-report-section">
-                      <div className="sup-report-section-icon">📋</div>
-                      <div className="sup-report-section-title">Supervisor Instructions</div>
-                      {(report.supervisor_instructions ?? report.next_steps)?.length > 0 ? (
-                        <ul className="sup-report-list">
-                          {(report.supervisor_instructions ?? report.next_steps).map((step, i) => <li key={i}>{step}</li>)}
-                        </ul>
-                      ) : (
-                        <span className="sup-report-no-data">No instructions recorded</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── AI Consultant panel (supervisor only, hidden-by-default) ── */}
-                {!isManager && (
-                  <>
-                    {consultErr && (
-                      <div className="sup-alert sup-alert-error" style={{ marginTop: 14 }}>
-                        ⚠️ {consultErr}
-                      </div>
-                    )}
-                    {aiAdvice && (
-                      <div style={{
-                        marginTop: 18,
-                        background: '#fffbeb',
-                        border: '1.5px solid #fcd34d',
-                        borderRadius: 12,
-                        padding: '16px 18px',
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                          <span style={{ fontSize: '1.1rem' }}>🧠</span>
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: '.9rem', color: '#92400e' }}>AI Expert Suggestions</div>
-                            <div style={{ fontSize: '.72rem', color: '#b45309' }}>
-                              {aiAdvice.disclaimer}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setAiAdvice(null)}
-                            style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#b45309', fontSize: '.85rem' }}
-                          >✕ Dismiss</button>
-                        </div>
-                        {aiAdvice.advice?.potential_risks?.length > 0 && (
-                          <div style={{ marginBottom: 10 }}>
-                            <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#92400e', marginBottom: 4 }}>⚠️ Potential Risks</div>
-                            <ul style={{ margin: 0, paddingLeft: 18 }}>
-                              {aiAdvice.advice.potential_risks.map((r, i) => (
-                                <li key={i} style={{ fontSize: '.82rem', color: '#78350f', marginBottom: 3 }}>{r}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {aiAdvice.advice?.suggested_treatments?.length > 0 && (
-                          <div style={{ marginBottom: 10 }}>
-                            <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#92400e', marginBottom: 4 }}>💊 Suggested Treatments</div>
-                            <ul style={{ margin: 0, paddingLeft: 18 }}>
-                              {aiAdvice.advice.suggested_treatments.map((t, i) => (
-                                <li key={i} style={{ fontSize: '.82rem', color: '#78350f', marginBottom: 3 }}>{t}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {aiAdvice.advice?.notes && (
-                          <div style={{ fontSize: '.78rem', color: '#92400e', fontStyle: 'italic', borderTop: '1px solid #fde68a', paddingTop: 8 }}>
-                            📝 {aiAdvice.advice.notes}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-
-              </div>
-            </section>
-
-            {/* ── Section 2: Farmer Task Progress ─────────── */}
-            {((report?.supervisor_instructions ?? report?.next_steps) || []).length > 0 && (
-              <section aria-label="Farmer Task Progress" style={{ marginTop: 20 }}>
-                <div className="sup-card" style={{ padding: '18px 22px' }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    marginBottom: 12,
-                  }}>
-                    <div style={{ fontSize: '.95rem', fontWeight: 700, color: 'var(--sup-text)' }}>
-                      👨‍🌾 Farmer Progress
-                    </div>
-                    <span style={{
-                      fontSize: '.78rem',
-                      fontWeight: 700,
-                      color: (report.completed_tasks || []).length >= (report.supervisor_instructions ?? report.next_steps ?? []).length ? '#16a34a' : '#d97706',
-                      background: (report.completed_tasks || []).length >= (report.supervisor_instructions ?? report.next_steps ?? []).length ? '#f0fdf4' : '#fffbeb',
-                      border: `1px solid ${(report.completed_tasks || []).length >= (report.supervisor_instructions ?? report.next_steps ?? []).length ? '#86efac' : '#fde68a'}`,
-                      borderRadius: 999,
-                      padding: '3px 12px',
-                    }}>
-                      {(report.completed_tasks || []).length} of {(report.supervisor_instructions ?? report.next_steps ?? []).length} tasks completed
-                      {(report.completed_tasks || []).length >= (report.supervisor_instructions ?? report.next_steps ?? []).length ? ' ✅' : ''}
+                    <span className="fd-hero-meta-item">
+                      <span className="fd-hero-meta-icon">🗓</span>
+                      {visits.length} visit{visits.length !== 1 ? 's' : ''}
                     </span>
                   </div>
-
-                  {/* Progress bar */}
-                  <div style={{
-                    height: 8, borderRadius: 99,
-                    background: 'var(--sage-100)',
-                    marginBottom: 14,
-                    overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      height: '100%',
-                      borderRadius: 99,
-                      background: (report.completed_tasks || []).length >= (report.supervisor_instructions ?? report.next_steps ?? []).length
-                        ? 'linear-gradient(90deg, #22c55e, #16a34a)'
-                        : 'linear-gradient(90deg, #f59e0b, #d97706)',
-                      width: `${Math.round(((report.completed_tasks || []).length / (report.supervisor_instructions ?? report.next_steps ?? []).length) * 100)}%`,
-                      transition: 'width .4s ease',
-                    }} />
-                  </div>
-
-                  {/* Task list (read-only for supervisor/manager) */}
-                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {(report.supervisor_instructions ?? report.next_steps ?? []).map((step, i) => {
-                      const done = (report.completed_tasks || []).includes(step);
-                      return (
-                        <li
-                          key={i}
-                          style={{
-                            display: 'flex', alignItems: 'flex-start', gap: 10,
-                            padding: '8px 12px',
-                            borderRadius: 8,
-                            background: done ? '#f0fdf4' : '#fafafa',
-                            border: `1px solid ${done ? '#bbf7d0' : '#f0f0f0'}`,
-                            fontSize: '.82rem',
-                            color: done ? '#15803d' : 'var(--sup-text)',
-                            opacity: done ? 0.85 : 1,
-                          }}
-                        >
-                          <span style={{
-                            width: 20, height: 20, borderRadius: 5, flexShrink: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: done ? '#22c55e' : 'var(--sage-100)',
-                            color: done ? '#fff' : 'var(--sup-muted)',
-                            fontSize: '.7rem', fontWeight: 700,
-                            marginTop: 1,
-                          }}>
-                            {done ? '✓' : (i + 1)}
-                          </span>
-                          <span style={{ textDecoration: done ? 'line-through' : 'none' }}>{step}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
                 </div>
-              </section>
-            )}
-
-            {/* ── Section 3: Start New Visit (supervisor only) ── */}
-            {!isManager && (
-            <section aria-label="Start New Visit" style={{ marginTop: 28 }}>
-              <div className="sup-action-area">
-                <div className="sup-action-title">Start New Visit</div>
-
-
-                {/* Data integrity notice */}
-                <div style={{
-                  fontSize: '.74rem',
-                  color: 'var(--sup-muted)',
-                  background: 'var(--sage-50)',
-                  border: '1px solid var(--sage-100)',
-                  borderRadius: 8,
-                  padding: '8px 12px',
-                  marginBottom: 16,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 7,
-                }}>
-                  🔒 All data on this page is locked to:
-                  <strong style={{ color: 'var(--sage-700)' }}>{farmer?.name}</strong> ›
-                  <strong style={{ color: 'var(--sage-700)' }}>{farm.name}</strong>
-                </div>
-
-                {/* VisitRecorder — live audio + file upload */}
-                <VisitRecorder
-                  farmId={farmId}
-                  farmerId={farmerId}
-                  token={token}
-                  onSuccess={handleNewVisit}
-                  onDelete={handleDeleteVisit}
-                />
               </div>
-            </section>
-            )}
-
-            {/* ── Section 3: Visit History Timeline ────────── */}
-            <section aria-label="Visit History" style={{ marginTop: 8 }}>
-              <h2 className="sup-section-title" style={{ marginBottom: 4 }}>
-                Visit History
-                {visits.length > 0 && (
-                  <span style={{ fontSize: '.82rem', fontWeight: 500, color: 'var(--sup-muted)', marginLeft: 10 }}>
-                    ({visits.length} visit{visits.length !== 1 ? 's' : ''})
-                  </span>
-                )}
-              </h2>
-              <p className="sup-section-sub">
-                Chronological log of all field visits for this plot.
-              </p>
-
-              {visits.length === 0 ? (
-                <div className="sup-empty" style={{ paddingTop: 40 }}>
-                  <div className="sup-empty-icon">📋</div>
-                  <div className="sup-empty-title">No visits yet</div>
-                  <div className="sup-empty-sub">
-                    Use "Start New Visit" above to record the first field visit.
+              {taskTotal > 0 && (
+                <div className="fd-hero-progress">
+                  <div className="fd-hero-progress-label">Task Progress</div>
+                  <div className="fd-hero-progress-bar-wrap">
+                    <div className="fd-hero-progress-bar" style={{ width: `${taskPct}%` }} />
                   </div>
-                </div>
-              ) : (
-                <div className="sup-timeline">
-                  {visits.map(visit => (
-                    <VisitCard
-                      key={visit.id}
-                      visit={visit}
-                      token={token}
-                      onDelete={handleDeleteVisit}
-                      readOnly={isManager}
-                    />
-                  ))}
+                  <div className="fd-hero-progress-count">{taskDone} / {taskTotal} done</div>
                 </div>
               )}
-            </section>
+            </div>
 
-            {/* ── Saved Reports — always-visible section (supervisor only) ─ */}
-            {!isManager && (
-              <section aria-label="Saved Reports" style={{ marginTop: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
-                  <h2 className="sup-section-title" style={{ marginBottom: 0 }}>Saved Reports</h2>
-                  {savedReports.length > 0 && (
-                    <span style={{ fontSize: '.8rem', color: 'var(--sup-muted)', fontWeight: 500 }}>
-                      {savedReports.length} saved
-                    </span>
-                  )}
-                </div>
-                <p className="sup-section-sub">
-                  Approved snapshots published to farmer and manager.
-                </p>
-
-                {savedReports.length === 0 ? (
-                  <div style={{
-                    background: 'rgba(245,251,248,.8)',
-                    border: '1px dashed var(--sage-300)',
-                    borderRadius: 12, padding: '20px 22px',
-                    color: 'var(--sup-muted)', fontSize: '.83rem', fontStyle: 'italic',
-                  }}>
-                    No saved reports yet. Generate a report and click “Save Report” to publish it.
+            {/* ── Tab Bar ─────────────────────────────────────── */}
+            <div className="fd-tab-bar">
+              {!isManager && (
+                <button
+                  id="tab-record"
+                  className={`fd-tab${activeTab === 'record' ? ' active' : ''}`}
+                  onClick={() => setActiveTab('record')}
+                >
+                  <span className="fd-tab-icon">🎤</span> Record Visit
+                </button>
+              )}
+              <button
+                id="tab-report"
+                className={`fd-tab${activeTab === 'report' ? ' active' : ''}`}
+                onClick={() => setActiveTab('report')}
+              >
+                <span className="fd-tab-icon">📊</span> AI Report
+              </button>
+              <button
+                id="tab-history"
+                className={`fd-tab${activeTab === 'history' ? ' active' : ''}`}
+                onClick={() => setActiveTab('history')}
+              >
+                <span className="fd-tab-icon">📋</span> Visit History
+                {visits.length > 0 && <span className="fd-tab-badge">{visits.length}</span>}
+              </button>
+              {!isManager && (
+                <button
+                  id="tab-saved"
+                  className={`fd-tab${activeTab === 'saved' ? ' active' : ''}`}
+                  onClick={() => setActiveTab('saved')}
+                >
+                  <span className="fd-tab-icon">📁</span> Reports
+                  {savedReports.length > 0 && <span className="fd-tab-badge">{savedReports.length}</span>}
+                </button>
+              )}
+            </div>
+            {/* ── TAB 1: Record Visit ───────────────────────────────── */}
+            {activeTab === 'record' && !isManager && (
+              <div className="fd-tab-panel">
+                <div className="fd-record-hero">
+                  <div className="fd-record-header">
+                    <div className="fd-record-header-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><rect x="9" y="2" width="6" height="11" rx="3" stroke="#fff" strokeWidth="1.5"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3M8 22h8" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
+                    <div>
+                      <div className="fd-record-title">Record a Field Visit</div>
+                      <div className="fd-record-sub">Capture on-site observations via live audio or file upload. Transcripts are saved and used to generate AI reports.</div>
+                    </div>
                   </div>
-                ) : (() => {
-                  const latest   = savedReports[0];
-                  const older    = savedReports.slice(1);
-                  const latestContent = latest.content || {};
-                  const risks    = latestContent.risks || [];
-                  const hasRisk  = risks.length > 0;
+                  <div className="fd-data-lock">
+                    Data locked to: <strong style={{ color: 'var(--sage-700)', marginLeft: 2 }}>{farmer?.name}</strong>
+                    <span style={{ margin: '0 3px', opacity: .5 }}>›</span>
+                    <strong style={{ color: 'var(--sage-700)' }}>{farm.name}</strong>
+                  </div>
+                  <div style={{ padding: '0 32px 28px' }}>
+                    <VisitRecorder
+                      farmId={farmId}
+                      farmerId={farmerId}
+                      token={token}
+                      onSuccess={(v) => { handleNewVisit(v); }}
+                      onDelete={handleDeleteVisit}
+                    />
+                  </div>
+                </div>
+                {visits.length > 0 && (
+                  <div style={{ textAlign: 'center', marginTop: 12 }}>
+                    <button
+                      onClick={() => setActiveTab('history')}
+                      style={{ background: 'none', border: 'none', color: 'var(--sage-600)', fontSize: '.82rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      View {visits.length} past visit{visits.length !== 1 ? 's' : ''} →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
-                  return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
-                      {/* ── Latest report — expanded quick-summary ──────────── */}
-                      <div style={{
-                        borderRadius: 14,
-                        border: `1.5px solid ${hasRisk ? '#fecaca' : '#86efac'}`,
-                        background: hasRisk ? '#fff5f5' : '#f0fdf4',
-                        overflow: 'hidden',
-                      }}>
-                        {/* Card header */}
-                        <div style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '12px 16px',
-                          borderBottom: `1px solid ${hasRisk ? '#fecaca' : '#86efac'}`,
-                          background: hasRisk ? '#fef2f2' : '#dcfce7',
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: '1rem' }}>{hasRisk ? '⚠️' : '✅'}</span>
-                            <div>
-                              <div style={{ fontWeight: 700, fontSize: '.88rem', color: hasRisk ? '#991b1b' : '#166534' }}>
-                                Report #{latest.report_number}
-                                <span style={{
-                                  marginLeft: 8, fontSize: '.72rem', fontWeight: 600,
-                                  background: hasRisk ? '#fee2e2' : '#bbf7d0',
-                                  color: hasRisk ? '#b91c1c' : '#15803d',
-                                  padding: '2px 8px', borderRadius: 99,
-                                }}>
-                                  {hasRisk ? `${risks.length} risk${risks.length > 1 ? 's' : ''}` : 'Healthy'}
-                                </span>
-                              </div>
-                              <div style={{ fontSize: '.72rem', color: hasRisk ? '#9f1b1b' : '#15803d', opacity: 0.8, marginTop: 1 }}>
-                                {latest.visit_count} visit{latest.visit_count !== 1 ? 's' : ''} ·{' '}
-                                {new Date(latest.saved_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                {latest.supervisor_name && ` · ${latest.supervisor_name}`}
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => downloadSavedReport(latest.id)}
-                            disabled={loadingPdf}
-                            style={{
-                              padding: '5px 14px', borderRadius: 8, border: 'none',
-                              background: hasRisk ? '#dc2626' : '#16a34a',
-                              color: '#fff', fontSize: '.75rem', fontWeight: 700,
-                              cursor: loadingPdf ? 'not-allowed' : 'pointer',
-                              opacity: loadingPdf ? 0.6 : 1,
-                            }}
-                          >
-                            {loadingPdf ? '⏳' : '📥 PDF'}
-                          </button>
+            {/* ── TAB 2: AI Report + Task Progress ─────────────────── */}
+            {activeTab === 'report' && (
+              <div className="fd-tab-panel">
+                <section aria-label="Living Master Report">
+                  <div className="sup-master-card sup-card">
+                    <div className="sup-report-header">
+                      <div>
+                        <div className="sup-live-badge">
+                          <span className="sup-live-dot" />
+                          AI · GEMINI
                         </div>
-
-                        {/* Inline summary body */}
-                        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          {/* Health */}
-                          <div>
-                            <div style={{ fontSize: '.7rem', fontWeight: 700, color: hasRisk ? '#991b1b' : '#166534', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
-                              🌿 Current Health
-                            </div>
-                            <div style={{ fontSize: '.83rem', color: '#111', lineHeight: 1.55 }}>
-                              {latestContent.current_health || 'No health information recorded.'}
-                            </div>
+                        <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--sup-text)', marginBottom: 2 }}>
+                          Living Master Report
+                        </h2>
+                        {report?.updated_at && (
+                          <div className="sup-report-meta">
+                            Last updated {new Date(report.updated_at).toLocaleString('en-IN', {
+                              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                            })}
                           </div>
-
-                          {/* Risks */}
-                          {risks.length > 0 && (
-                            <div>
-                              <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
-                                ⚠️ Risks
-                              </div>
-                              <ul style={{ margin: 0, paddingLeft: 16 }}>
-                                {risks.map((r, i) => (
-                                  <li key={i} style={{ fontSize: '.82rem', color: '#7f1d1d', lineHeight: 1.5, marginBottom: 2 }}>{r}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* Instructions summary */}
-                          {(latestContent.supervisor_instructions || []).length > 0 && (
-                            <div>
-                              <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
-                                📋 Instructions
-                              </div>
-                              <ul style={{ margin: 0, paddingLeft: 16 }}>
-                                {(latestContent.supervisor_instructions).map((s, i) => (
-                                  <li key={i} style={{ fontSize: '.82rem', color: '#1e3a5f', lineHeight: 1.5, marginBottom: 2 }}>{s}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                        )}
+                        {!report && (
+                          <div className="sup-report-meta">
+                            Auto-compiled from visit transcripts for <strong>{farm.name}</strong>
+                          </div>
+                        )}
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, padding: '3px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 99, fontSize: '.68rem', color: '#166534', fontWeight: 600 }}>
+                          Strictly generated from supervisor transcripts only
                         </div>
                       </div>
-
-                      {/* ── Older reports — compact rows with collapse toggle ───── */}
-                      {older.length > 0 && (
-                        <>
-                          <button
-                            onClick={() => setShowOlder(s => !s)}
-                            style={{
-                              background: 'none', border: 'none',
-                              color: 'var(--sup-muted)', fontSize: '.78rem', fontWeight: 600,
-                              cursor: 'pointer', padding: '2px 0',
-                              textAlign: 'left', display: 'flex', alignItems: 'center', gap: 5,
-                            }}
-                          >
-                            <span style={{
-                              display: 'inline-block',
-                              transform: showOlder ? 'rotate(90deg)' : 'rotate(0deg)',
-                              transition: 'transform .2s',
-                              fontSize: '.7rem',
-                            }}>▶</span>
-                            {showOlder
-                              ? `Hide ${older.length} older report${older.length > 1 ? 's' : ''}`
-                              : `Show ${older.length} older report${older.length > 1 ? 's' : ''}`}
+                      {!isManager && (
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button className="sup-btn-regenerate" onClick={generateDraft} disabled={generating || visits.length === 0} title={visits.length === 0 ? 'Add a visit first' : ''}>
+                            {generating ? 'Generating…' : 'Generate Report'}
                           </button>
-
-                          {showOlder && older.map(sr => (
-                            <div
-                              key={sr.id}
-                              style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                padding: '10px 14px', borderRadius: 10,
-                                background: '#f9fafb', border: '1px solid #e5e7eb',
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--sup-text)' }}>
-                                  Report #{sr.report_number}
-                                </div>
-                                <div style={{ fontSize: '.72rem', color: 'var(--sup-muted)', marginTop: 2 }}>
-                                  {sr.visit_count} visit{sr.visit_count !== 1 ? 's' : ''} ·{' '}
-                                  {new Date(sr.saved_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  {sr.supervisor_name && ` · ${sr.supervisor_name}`}
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => downloadSavedReport(sr.id)}
-                                disabled={loadingPdf}
-                                style={{
-                                  padding: '5px 12px', borderRadius: 8,
-                                  border: '1.5px solid var(--sage-300)',
-                                  background: '#fff', color: 'var(--sage-700)',
-                                  fontSize: '.75rem', fontWeight: 600,
-                                  cursor: loadingPdf ? 'not-allowed' : 'pointer',
-                                  opacity: loadingPdf ? 0.6 : 1,
-                                }}
-                              >
-                                {loadingPdf ? '⏳' : '📥 PDF'}
-                              </button>
-                            </div>
-                          ))}
-                        </>
+                          <button className="sup-btn-consult" onClick={getAIAdvice} disabled={consulting || visits.length === 0} title="Get on-demand AI expert suggestions">
+                            {consulting ? 'Analysing…' : 'AI Expert Suggestions'}
+                          </button>
+                        </div>
                       )}
                     </div>
-                  );
-                })()}
-              </section>
+
+                    {genError && <div className="sup-alert sup-alert-error" style={{ marginBottom: 16 }}>{genError}</div>}
+                    {generating && (
+                      <div className="sup-report-generating">
+                        <span className="sup-live-dot" style={{ width: 10, height: 10 }} />
+                        Gemini is analysing visit transcripts…
+                      </div>
+                    )}
+                    {!generating && !report && (
+                      <div style={{ background: 'rgba(245,251,248,.8)', border: '1px dashed var(--sage-300)', borderRadius: 10, padding: '18px 20px', color: 'var(--sup-muted)', fontSize: '.84rem', fontStyle: 'italic' }}>
+                        { visits.length === 0 ? 'No AI report yet. Record your first visit to generate one.' : 'No report yet. Click Generate Report to create one.'}
+                      </div>
+                    )}
+                    {!generating && report && (
+                      <div className="sup-report-grid">
+                        <div className="sup-report-section">
+                          <div class="sup-report-section-icon"></div>
+                          <div className="sup-report-section-title">Current Crop Health</div>
+                          <div className="sup-report-section-content">{safeStr(report.current_health) || <span className="sup-report-no-data">No information provided.</span>}</div>
+                        </div>
+                        <div className="sup-report-section">
+                          <div class="sup-report-section-icon"></div>
+                          <div className="sup-report-section-title">Detected Risks</div>
+                          {report.risks?.length > 0 ? (<ul className="sup-report-list">{report.risks.map((r, i) => <li key={i}>{r}</li>)}</ul>) : (<span className="sup-report-no-data">No risks reported</span>)}
+                        </div>
+                        <div className="sup-report-section">
+                          <div class="sup-report-section-icon"></div>
+                          <div className="sup-report-section-title">Supervisor Instructions</div>
+                          {(report.supervisor_instructions ?? report.next_steps)?.length > 0 ? (<ul className="sup-report-list">{(report.supervisor_instructions ?? report.next_steps).map((s, i) => <li key={i}>{s}</li>)}</ul>) : (<span className="sup-report-no-data">No instructions recorded</span>)}
+                        </div>
+                      </div>
+                    )}
+
+                    {!isManager && (
+                      <>
+                        {consultErr && <div className="sup-alert sup-alert-error" style={{ marginTop: 14 }}>{consultErr}</div>}
+                        {aiAdvice && (
+                          <div style={{ marginTop: 18, background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 12, padding: '16px 18px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                              
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '.9rem', color: '#92400e' }}>AI Expert Suggestions</div>
+                                <div style={{ fontSize: '.72rem', color: '#b45309' }}>{aiAdvice.disclaimer}</div>
+                              </div>
+                              <button onClick={() => setAiAdvice(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#b45309', fontSize: '.85rem' }}>Dismiss</button>
+                            </div>
+                            {aiAdvice.advice?.potential_risks?.length > 0 && (
+                              <div style={{ marginBottom: 10 }}>
+                                <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#92400e', marginBottom: 4 }}>Potential Risks</div>
+                                <ul style={{ margin: 0, paddingLeft: 18 }}>{aiAdvice.advice.potential_risks.map((r, i) => <li key={i} style={{ fontSize: '.82rem', color: '#78350f', marginBottom: 3 }}>{r}</li>)}</ul>
+                              </div>
+                            )}
+                            {aiAdvice.advice?.suggested_treatments?.length > 0 && (
+                              <div style={{ marginBottom: 10 }}>
+                                <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#92400e', marginBottom: 4 }}>Suggested Treatments</div>
+                                <ul style={{ margin: 0, paddingLeft: 18 }}>{aiAdvice.advice.suggested_treatments.map((t, i) => <li key={i} style={{ fontSize: '.82rem', color: '#78350f', marginBottom: 3 }}>{t}</li>)}</ul>
+                              </div>
+                            )}
+                            {aiAdvice.advice?.notes && <div style={{ fontSize: '.78rem', color: '#92400e', fontStyle: 'italic', borderTop: '1px solid #fde68a', paddingTop: 8 }}>{aiAdvice.advice.notes}</div>}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </section>
+
+                {taskTotal > 0 && (
+                  <section aria-label="Farmer Task Progress" style={{ marginTop: 20 }}>
+                    <div className="sup-card" style={{ padding: '18px 22px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <div style={{ fontSize: '.95rem', fontWeight: 700, color: 'var(--sup-text)' }}>Farmer Task Progress</div>
+                        <span style={{ fontSize: '.78rem', fontWeight: 700, color: taskDone >= taskTotal ? '#16a34a' : '#d97706', background: taskDone >= taskTotal ? '#f0fdf4' : '#fffbeb', border: `1px solid ${taskDone >= taskTotal ? '#86efac' : '#fde68a'}`, borderRadius: 999, padding: '3px 12px' }}>
+                          {taskDone} of {taskTotal} completed{taskDone >= taskTotal ? '' : ''}
+                        </span>
+                      </div>
+                      <div style={{ height: 8, borderRadius: 99, background: 'var(--sage-100)', marginBottom: 14, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: 99, background: taskDone >= taskTotal ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#f59e0b,#d97706)', width: `${taskPct}%`, transition: 'width .4s ease' }} />
+                      </div>
+                      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {taskList.map((step, i) => {
+                          const done = completedList.includes(step);
+                          return (
+                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 12px', borderRadius: 8, background: done ? '#f0fdf4' : '#fafafa', border: `1px solid ${done ? '#bbf7d0' : '#f0f0f0'}`, fontSize: '.82rem', color: done ? '#15803d' : 'var(--sup-text)', opacity: done ? 0.85 : 1 }}>
+                              <span style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? '#22c55e' : 'var(--sage-100)', color: done ? '#fff' : 'var(--sup-muted)', fontSize: '.7rem', fontWeight: 700, marginTop: 1 }}>
+                                {done ? '✓' : (i + 1)}
+                              </span>
+                              <span style={{ textDecoration: done ? 'line-through' : 'none' }}>{step}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+
+            {/* ── TAB 3: Visit History ──────────────────────────────── */}
+            {activeTab === 'history' && (
+              <div className="fd-tab-panel">
+                <section aria-label="Visit History">
+                  <h2 className="sup-section-title" style={{ marginBottom: 4 }}>
+                    Visit History
+                    {visits.length > 0 && <span style={{ fontSize: '.82rem', fontWeight: 500, color: 'var(--sup-muted)', marginLeft: 10 }}>({visits.length} visit{visits.length !== 1 ? 's' : ''})</span>}
+                  </h2>
+                  <p className="sup-section-sub">Chronological log of all field visits for this plot.</p>
+                  {visits.length === 0 ? (
+                    <div className="sup-empty" style={{ paddingTop: 40 }}>
+                      <div className="sup-empty-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
+                      <div className="sup-empty-title">No visits yet</div>
+                      <div className="sup-empty-sub">
+                        {!isManager
+                          ? <button onClick={() => setActiveTab('record')} style={{ background: 'none', border: 'none', color: 'var(--sage-600)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontSize: '.85rem' }}>Go to Record Visit →</button>
+                          : 'The supervisor has not logged any visits yet.'}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="sup-timeline">
+                      {visits.map(visit => (
+                        <VisitCard key={visit.id} visit={visit} token={token} onDelete={handleDeleteVisit} readOnly={isManager} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+
+            {/* ── TAB 4: Saved Reports ─────────────────────────────── */}
+            {activeTab === 'saved' && !isManager && (
+              <div className="fd-tab-panel">
+                <section aria-label="Saved Reports">
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
+                    <h2 className="sup-section-title" style={{ marginBottom: 0 }}>Saved Reports</h2>
+                    {savedReports.length > 0 && <span style={{ fontSize: '.8rem', color: 'var(--sup-muted)', fontWeight: 500 }}>{savedReports.length} saved</span>}
+                  </div>
+                  <p className="sup-section-sub">Approved snapshots published to farmer and manager.</p>
+
+                  {savedReports.length === 0 ? (
+                    <div style={{ background: 'rgba(245,251,248,.8)', border: '1px dashed var(--sage-300)', borderRadius: 12, padding: '20px 22px', color: 'var(--sup-muted)', fontSize: '.83rem', fontStyle: 'italic' }}>
+                      No saved reports yet. Go to <button onClick={() => setActiveTab('report')} style={{ background: 'none', border: 'none', color: 'var(--sage-600)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>AI Report tab</button> to generate and save one.
+                    </div>
+                  ) : (() => {
+                    const latest = savedReports[0];
+                    const older  = savedReports.slice(1);
+                    const latestContent = latest.content || {};
+                    const risks   = latestContent.risks || [];
+                    const hasRisk = risks.length > 0;
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ borderRadius: 14, border: `1.5px solid ${hasRisk ? '#fecaca' : '#86efac'}`, background: hasRisk ? '#fff5f5' : '#f0fdf4', overflow: 'hidden' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${hasRisk ? '#fecaca' : '#86efac'}`, background: hasRisk ? '#fef2f2' : '#dcfce7' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: '1rem' }}>{hasRisk ? '!' : '✓'}</span>
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '.88rem', color: hasRisk ? '#991b1b' : '#166534' }}>
+                                  Report #{latest.report_number}
+                                  <span style={{ marginLeft: 8, fontSize: '.72rem', fontWeight: 600, background: hasRisk ? '#fee2e2' : '#bbf7d0', color: hasRisk ? '#b91c1c' : '#15803d', padding: '2px 8px', borderRadius: 99 }}>
+                                    {hasRisk ? `${risks.length} risk${risks.length > 1 ? 's' : ''}` : 'Healthy'}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '.72rem', color: hasRisk ? '#9f1b1b' : '#15803d', opacity: 0.8, marginTop: 1 }}>
+                                  {latest.visit_count} visit{latest.visit_count !== 1 ? 's' : ''} · {new Date(latest.saved_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}{latest.supervisor_name && ` · ${latest.supervisor_name}`}
+                                </div>
+                              </div>
+                            </div>
+                            <button onClick={() => downloadSavedReport(latest.id)} disabled={loadingPdf} style={{ padding: '5px 14px', borderRadius: 8, border: 'none', background: hasRisk ? '#dc2626' : '#16a34a', color: '#fff', fontSize: '.75rem', fontWeight: 700, cursor: loadingPdf ? 'not-allowed' : 'pointer', opacity: loadingPdf ? 0.6 : 1 }}>
+                              {loadingPdf ? '…' : 'PDF'}
+                            </button>
+                          </div>
+                          <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div>
+                              <div style={{ fontSize: '.7rem', fontWeight: 700, color: hasRisk ? '#991b1b' : '#166534', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Current Health</div>
+                              <div style={{ fontSize: '.83rem', color: '#111', lineHeight: 1.55 }}>{latestContent.current_health || 'No health information recorded.'}</div>
+                            </div>
+                            {risks.length > 0 && (
+                              <div>
+                                <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Risks</div>
+                                <ul style={{ margin: 0, paddingLeft: 16 }}>{risks.map((r, i) => <li key={i} style={{ fontSize: '.82rem', color: '#7f1d1d', lineHeight: 1.5, marginBottom: 2 }}>{r}</li>)}</ul>
+                              </div>
+                            )}
+                            {(latestContent.supervisor_instructions || []).length > 0 && (
+                              <div>
+                                <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Instructions</div>
+                                <ul style={{ margin: 0, paddingLeft: 16 }}>{latestContent.supervisor_instructions.map((s, i) => <li key={i} style={{ fontSize: '.82rem', color: '#1e3a5f', lineHeight: 1.5, marginBottom: 2 }}>{s}</li>)}</ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {older.length > 0 && (
+                          <>
+                            <button onClick={() => setShowOlder(s => !s)} style={{ background: 'none', border: 'none', color: 'var(--sup-muted)', fontSize: '.78rem', fontWeight: 600, cursor: 'pointer', padding: '2px 0', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <span style={{ display: 'inline-block', transform: showOlder ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform .2s', fontSize: '.7rem' }}>▶</span>
+                              {showOlder ? `Hide ${older.length} older report${older.length > 1 ? 's' : ''}` : `Show ${older.length} older report${older.length > 1 ? 's' : ''}`}
+                            </button>
+                            {showOlder && older.map(sr => (
+                              <div key={sr.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--sup-text)' }}>Report #{sr.report_number}</div>
+                                  <div style={{ fontSize: '.72rem', color: 'var(--sup-muted)', marginTop: 2 }}>
+                                    {sr.visit_count} visit{sr.visit_count !== 1 ? 's' : ''} · {new Date(sr.saved_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}{sr.supervisor_name && ` · ${sr.supervisor_name}`}
+                                  </div>
+                                </div>
+                                <button onClick={() => downloadSavedReport(sr.id)} disabled={loadingPdf} style={{ padding: '5px 12px', borderRadius: 8, border: '1.5px solid var(--sage-300)', background: '#fff', color: 'var(--sage-700)', fontSize: '.75rem', fontWeight: 600, cursor: loadingPdf ? 'not-allowed' : 'pointer', opacity: loadingPdf ? 0.6 : 1 }}>
+                                  {loadingPdf ? '…' : 'PDF'}
+                                </button>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </section>
+              </div>
             )}
 
           </>
         )}
       </main>
+
+
+
+
 
       {/* ── Save Success Toast ───────────────────────────────────────── */}
       {saveSuccess && (
@@ -838,7 +688,7 @@ export default function FarmDetailPage() {
             minWidth: 260,
           }}
         >
-          <span style={{ fontSize: '1.3rem' }}>✅</span>
+          <span style={{ fontSize: '1.3rem' }}>✓</span>
           <div>
             <div style={{ fontWeight: 700, fontSize: '.9rem' }}>
               Report #{saveSuccess.report_number} Saved!
@@ -850,7 +700,7 @@ export default function FarmDetailPage() {
           <button
             onClick={() => setSaveSuccess(null)}
             style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.7)', fontSize: '1rem', cursor: 'pointer', marginLeft: 'auto', padding: 0 }}
-          >✕</button>
+          >×</button>
         </div>
       )}
 
@@ -879,7 +729,7 @@ export default function FarmDetailPage() {
               display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
             }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', color: '#111' }}>📄 Report Preview</div>
+                <div style={{ fontWeight: 700, fontSize: '1rem', color: '#111' }}>Report Preview</div>
                 {draftMeta && (
                   <div style={{ fontSize: '.76rem', color: '#6b7280', marginTop: 4 }}>
                     {draftMeta.mode === 'incremental'
@@ -893,7 +743,7 @@ export default function FarmDetailPage() {
               <button
                 onClick={() => setShowPreview(false)}
                 style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#aaa' }}
-              >✕</button>
+              >×</button>
             </div>
 
             {/* Report Content Preview */}
@@ -901,7 +751,7 @@ export default function FarmDetailPage() {
               {/* Health Status */}
               <div style={{ marginBottom: 18 }}>
                 <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>
-                  🌿 Current Crop Health
+                  Current Crop Health
                 </div>
                 <div style={{ fontSize: '.9rem', color: '#111', lineHeight: 1.6, padding: '12px 16px', background: '#f0fdf4', borderRadius: 10, border: '1px solid #86efac' }}>
                   {draftReport.current_health || 'No health information recorded.'}
@@ -911,7 +761,7 @@ export default function FarmDetailPage() {
               {/* Risks */}
               <div style={{ marginBottom: 18 }}>
                 <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>
-                  ⚠️ Risks Identified
+                  Risks Identified
                 </div>
                 {draftReport.risks?.length > 0
                   ? <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -926,7 +776,7 @@ export default function FarmDetailPage() {
               {/* Supervisor Instructions */}
               <div style={{ marginBottom: 18 }}>
                 <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>
-                  📋 Supervisor Instructions
+                  Supervisor Instructions
                 </div>
                 {draftReport.supervisor_instructions?.length > 0
                   ? <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -940,12 +790,12 @@ export default function FarmDetailPage() {
 
               {/* Disclaimer */}
               <div style={{ fontSize: '.72rem', color: '#6b7280', fontStyle: 'italic', padding: '8px 12px', background: '#f9fafb', borderRadius: 8, marginBottom: 16 }}>
-                🔒 Strictly generated from supervisor transcripts only. No external data sources used.
+                Strictly generated from supervisor transcripts only. No external data sources used.
               </div>
 
               {saveError && (
                 <div style={{ background: '#fff5f5', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px', fontSize: '.8rem', marginBottom: 12 }}>
-                  ⚠️ {saveError}
+                  {saveError}
                 </div>
               )}
             </div>
@@ -958,7 +808,7 @@ export default function FarmDetailPage() {
             }}>
               <button
                 onClick={() => openReportPdfInTab(
-                  { saved_report: { ...draftReport, farm_name: farm?.name, location: farm?.location, crop_types: farm?.crop_types, farmer_name: farmer?.name, supervisor_name: 'Supervisor', report_number: (savedReports.length + 1), visit_count: draftMeta?.new_visit_count || 0, saved_at: new Date().toISOString() } },
+                  { saved_report: { content: draftReport, farm_name: farm?.name, location: farm?.location, crop_types: farm?.crop_types, farmer_name: farmer?.name, supervisor_name: 'Supervisor', report_number: (savedReports.length + 1), visit_count: visits.length, saved_at: new Date().toISOString() } },
                   'supervisor', aiAdvice
                 )}
                 style={{
@@ -967,7 +817,7 @@ export default function FarmDetailPage() {
                   fontSize: '.82rem', fontWeight: 600, cursor: 'pointer', color: 'var(--sage-700)',
                 }}
               >
-                👁 Preview PDF
+                Preview PDF
               </button>
               <button
                 onClick={() => { setShowPreview(false); setDraftReport(null); setDraftMeta(null); }}
@@ -993,7 +843,7 @@ export default function FarmDetailPage() {
                   boxShadow: '0 2px 8px rgba(22,163,74,.3)',
                 }}
               >
-                {saving ? '⏳ Saving…' : '💾 Save Report'}
+                {saving ? '… Saving…' : 'Save Report'}
               </button>
             </div>
           </div>

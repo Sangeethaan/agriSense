@@ -87,12 +87,12 @@ function RegisterFarmModal({ farmerId, farmerName, token, onClose, onCreated }) 
       <div className="sup-modal">
         {/* Header */}
         <div className="sup-modal-header">
-          <div className="sup-modal-icon">🌾</div>
+          <div className="sup-modal-icon"><svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M3 21h18M9 21V11l3-3 3 3v10M5 21V13l-2 2M19 21V13l2 2" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
           <div>
             <div className="sup-modal-title" id="modal-title">Register New Farm</div>
             <div className="sup-modal-sub">Adding a plot for <strong>{farmerName}</strong></div>
           </div>
-          <button className="sup-modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="sup-modal-close" onClick={onClose} aria-label="Close">×</button>
         </div>
 
         {/* Body */}
@@ -100,7 +100,7 @@ function RegisterFarmModal({ farmerId, farmerName, token, onClose, onCreated }) 
           <div className="sup-modal-body">
             {error && (
               <div className="sup-alert sup-alert-error" style={{ marginBottom: 16 }}>
-                ⚠️ {error}
+                {error}
               </div>
             )}
 
@@ -169,14 +169,14 @@ function RegisterFarmModal({ farmerId, farmerName, token, onClose, onCreated }) 
                 <div className="sup-chip-list">
                   {cropTypes.map(c => (
                     <span key={c} className="sup-chip">
-                      🌱 {c}
+                      {c}
                       <button
                         type="button"
                         className="sup-chip-remove"
                         onClick={() => removeCrop(c)}
                         aria-label={`Remove ${c}`}
                       >
-                        ✕
+                        ×
                       </button>
                     </span>
                   ))}
@@ -203,7 +203,7 @@ function RegisterFarmModal({ farmerId, farmerName, token, onClose, onCreated }) 
             >
               {saving
                 ? <><span style={{ animation: 'recordSpin .7s linear infinite', display: 'inline-block' }}>⏳</span> Saving…</>
-                : '🌾 Register Farm'}
+                : 'Register Farm'}
             </button>
           </div>
         </form>
@@ -225,12 +225,12 @@ function DeleteFarmerDialog({ farmerName, onConfirm, onCancel, deleting }) {
     >
       <div className="sup-modal" style={{ maxWidth: 420 }}>
         <div className="sup-modal-header">
-          <div className="sup-modal-icon" style={{ background: 'linear-gradient(135deg,#fca5a5,#ef4444)' }}>🗑️</div>
+          <div class="sup-modal-icon" style={{ background: 'linear-gradient(135deg,#fca5a5,#ef4444)' }}></div>
           <div>
             <div className="sup-modal-title">Delete Farmer</div>
             <div className="sup-modal-sub">This action cannot be undone</div>
           </div>
-          <button className="sup-modal-close" onClick={onCancel} aria-label="Close">✕</button>
+          <button className="sup-modal-close" onClick={onCancel} aria-label="Close">×</button>
         </div>
         <div className="sup-modal-body">
           <div style={{
@@ -238,7 +238,7 @@ function DeleteFarmerDialog({ farmerName, onConfirm, onCancel, deleting }) {
             borderRadius: 10, padding: '14px 16px',
             color: '#991b1b', fontSize: '.88rem', lineHeight: 1.6,
           }}>
-            ⚠️ You are about to permanently delete <strong>{farmerName}</strong>.<br />
+            You are about to permanently delete <strong>{farmerName}</strong>.<br />
             All their <strong>farms, visit records, transcripts and reports</strong> will also be deleted.
           </div>
         </div>
@@ -251,7 +251,7 @@ function DeleteFarmerDialog({ farmerName, onConfirm, onCancel, deleting }) {
             onClick={onConfirm}
             disabled={deleting}
           >
-            {deleting ? '⏳ Deleting…' : '🗑️ Yes, Delete'}
+            {deleting ? 'Deleting…' : 'Yes, Delete'}
           </button>
         </div>
       </div>
@@ -382,7 +382,7 @@ export default function FarmerProfilePage() {
         )}
 
         {error && !loading && (
-          <div className="sup-alert sup-alert-error">⚠️ {error}</div>
+          <div className="sup-alert sup-alert-error">{error}</div>
         )}
 
         {!loading && farmer && (
@@ -395,7 +395,7 @@ export default function FarmerProfilePage() {
                 <div className="sup-profile-meta">
                   {farmer.village && <span>📍 {farmer.village}</span>}
                   {farmer.phone   && <span>📞 {farmer.phone}</span>}
-                  <span>✉️ {farmer.email}</span>
+                  <span>✉ {farmer.email}</span>
                 </div>
               </div>
               {/* Delete Farmer */}
@@ -409,7 +409,7 @@ export default function FarmerProfilePage() {
                 onClick={() => setShowDeleteDialog(true)}
                 title="Delete this farmer"
               >
-                🗑️ Delete Farmer
+                Delete Farmer
               </button>
             </div>
 
@@ -443,7 +443,7 @@ export default function FarmerProfilePage() {
             {/* ── Farm grid ───────────────────────────────── */}
             {farms.length === 0 ? (
               <div className="sup-empty">
-                <div className="sup-empty-icon">🌿</div>
+                <div className="sup-empty-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" fill="#4ade80" opacity=".25"/><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" stroke="#22c55e" strokeWidth="1.5" strokeLinejoin="round"/><path d="M12 20V10" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
                 <div className="sup-empty-title">No farms registered</div>
                 <div className="sup-empty-sub">
                   Use the <strong>+ Register Farm</strong> button above to add this farmer's first plot.
@@ -462,7 +462,7 @@ export default function FarmerProfilePage() {
                     onKeyDown={e => e.key === 'Enter' && goToFarm(farm.id)}
                   >
                     <div className="sup-farm-header">
-                      <div className="sup-farm-icon">🌾</div>
+                      <div className="sup-farm-icon"><svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M3 21h18M9 21V11l3-3 3 3v10M5 21V13l-2 2M19 21V13l2 2" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
                       <div>
                         <div className="sup-farm-name">{farm.name}</div>
                         <div className="sup-farm-loc">
@@ -535,7 +535,7 @@ export default function FarmerProfilePage() {
                         aria-label={`Delete ${farm.name}`}
                         title="Delete farm"
                       >
-                        {deletingFarmId === farm.id ? '⏳' : '🗑️'}
+                        {deletingFarmId === farm.id ? '…' : 'Delete'}
                       </button>
                     </div>
                   </div>

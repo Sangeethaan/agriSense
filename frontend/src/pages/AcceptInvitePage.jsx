@@ -85,7 +85,7 @@ export default function AcceptInvitePage() {
   if (validating) return (
     <div style={shell}>
       <div style={card}>
-        <div style={logoBox}>🌱</div>
+        <div style={logoBox}><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M12 21C12 21 5 15 5 9a7 7 0 0 1 14 0c0 6-7 12-7 12z" fill="#4ade80" opacity=".3"/><path d="M12 21C12 21 5 15 5 9a7 7 0 0 1 14 0c0 6-7 12-7 12z" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 21V10" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/></svg></div>
         <p style={{ color: '#5d7d6e', textAlign: 'center', marginTop: 16 }}>Verifying invite link…</p>
       </div>
     </div>
@@ -95,7 +95,7 @@ export default function AcceptInvitePage() {
   if (tokenErr) return (
     <div style={shell}>
       <div style={card}>
-        <div style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: 16 }}>⚠️</div>
+        <div style={{ width: 56, height: 56, background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M12 9v4" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1" fill="#dc2626"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#dc2626" strokeWidth="1.5" strokeLinejoin="round"/></svg></div>
         <h2 style={{ ...heading, textAlign: 'center' }}>Invalid Link</h2>
         <p style={{ color: '#991b1b', fontSize: '.88rem', textAlign: 'center', lineHeight: 1.6, marginBottom: 20 }}>
           {tokenErr}
@@ -114,7 +114,7 @@ export default function AcceptInvitePage() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={logoBox}>🌱</div>
+          <div style={logoBox}><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M12 21C12 21 5 15 5 9a7 7 0 0 1 14 0c0 6-7 12-7 12z" fill="#4ade80" opacity=".3"/><path d="M12 21C12 21 5 15 5 9a7 7 0 0 1 14 0c0 6-7 12-7 12z" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 21V10" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/></svg></div>
           <h1 style={heading}>Join AgriSense</h1>
           <p style={{ color: '#5d7d6e', fontSize: '.88rem', margin: '6px 0 0', lineHeight: 1.5 }}>
             Invited by <strong style={{ color: '#1b3a2d' }}>{supName}</strong><br />
@@ -177,7 +177,7 @@ export default function AcceptInvitePage() {
                 onClick={() => setShowPwd(v => !v)}
                 aria-label={showPwd ? 'Hide password' : 'Show password'}
               >
-                {showPwd ? '🙈' : '👁️'}
+                {showPwd ? 'Hide' : 'Show'}
               </button>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function AcceptInvitePage() {
             disabled={saving}
             style={submitBtn}
           >
-            {saving ? 'Creating account…' : 'Create My Account 🌾'}
+            {saving ? 'Creating account…' : 'Create My Account'}
           </button>
         </form>
 

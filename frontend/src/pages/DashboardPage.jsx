@@ -3,9 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 const ROLE_CONFIG = {
-  supervisor: { label: 'Supervisor', emoji: '🔍', accent: '#217a4a' },
-  farmer:     { label: 'Farmer',     emoji: '🌾', accent: '#2da05f' },
-  manager:    { label: 'Manager',    emoji: '📋', accent: '#e8a838' },
+  supervisor: { label: 'Supervisor', emoji: '', accent: '#217a4a' },
+  farmer:     { label: 'Farmer',     emoji: '', accent: '#2da05f' },
+  manager:    { label: 'Manager',    emoji: '', accent: '#e8a838' },
 };
 
 export default function DashboardPage() {
@@ -57,7 +57,7 @@ export default function DashboardPage() {
             alignItems: 'center',
             gap: 8,
           }}>
-            🚫 {location.state?.message || 'Access denied for this page.'}
+            {location.state?.message || 'Access denied for this page.'}
           </div>
         )}
 

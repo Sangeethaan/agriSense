@@ -387,6 +387,46 @@ router.get('/:farmId/saved-reports/latest', authenticate, async (req, res, next)
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  GET /api/farms/:farmId/saved-reports/:reportId   (supervisor + manager + farmer[own])
+//  Returns the full content of a specific saved report for PDF generation.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/:farmId/saved-reports/:reportId', authenticate, async (req, res, next) => {
+  try {
+    const { farmId, reportId } = req.params;
+
+    if (req.user.role === 'farmer') {
+      const { rows } = await query('SELECT id FROM farms WHERE id = $1 AND farmer_id = $2', [farmId, req.user.id]);
+      if (!rows.length) return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { rows } = await query(
+      `SELECT
+         sr.id, sr.report_number, sr.visit_count, sr.saved_at,
+         sr.content, sr.completed_tasks,
+         u.name      AS supervisor_name,
+         f.name      AS farm_name,
+         f.location,
+         f.crop_types,
+         farmer.name AS farmer_name
+       FROM   saved_reports sr
+       LEFT JOIN users  u      ON u.id      = sr.supervisor_id
+       LEFT JOIN farms  f      ON f.id      = sr.farm_id
+       LEFT JOIN users  farmer ON farmer.id = f.farmer_id
+       WHERE  sr.farm_id = $1 AND sr.id = $2`,
+      [farmId, reportId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Saved report not found' });
+    }
+
+    return res.json({ saved_report: rows[0] });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  GET /api/farms/:farmId/saved-reports   (supervisor + manager + farmer[own])
 //  Lists all saved report snapshots for a farm (metadata only, not full content).
 // ─────────────────────────────────────────────────────────────────────────────

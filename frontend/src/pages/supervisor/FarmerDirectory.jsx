@@ -65,7 +65,13 @@ export function SupervisorNav({ crumbs }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div className="sup-nav-brand" onClick={() => navigate('/supervisor')}
           style={{ cursor: 'pointer' }}>
-          <div className="sup-nav-logo">🌱</div>
+          <div className="sup-nav-logo">
+            <svg viewBox="0 0 24 24" fill="none" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C12 22 4 16 4 9a8 8 0 0 1 16 0c0 7-8 13-8 13z" fill="#4ade80" opacity=".25"/>
+              <path d="M12 22C12 22 4 16 4 9a8 8 0 0 1 16 0c0 7-8 13-8 13z" stroke="#22c55e" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M12 22V11" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
           <div>
             <div className="sup-nav-title">AgriSense</div>
             <div className="sup-nav-sub">Supervisor Portal</div>
@@ -94,7 +100,7 @@ export function SupervisorNav({ crumbs }) {
       <div className="sup-nav-user">
         <div className="sup-nav-user-info">
           <span className="sup-nav-user-name">{user?.name}</span>
-          <span className="sup-nav-role-badge">🔍 Supervisor</span>
+          <span className="sup-nav-role-badge">Supervisor</span>
         </div>
         <button
           id="btn-supervisor-signout"
@@ -276,16 +282,18 @@ export default function FarmerDirectory() {
 
       <main className="sup-page">
 
-        {/* ── Greeting ──────────────────────────────────────── */}
-        <div className="sup-greeting">
-          <div className="sup-greeting-label">🛰️ Command Center</div>
-          <h1 className="sup-greeting-title">
-            Hello, {user?.name?.split(' ')[0]}! 👋
-          </h1>
-          <p className="sup-greeting-sub">{today}</p>
+        {/* ── Page Header ──────────────────────────────────────── */}
+        <div className="sup-page-header">
+          <div>
+            <h1 className="sup-page-title">Supervisor Dashboard</h1>
+            <p className="sup-page-date">{today}</p>
+          </div>
+          <div className="sup-page-header-right">
+            <span className="sup-page-role-tag">Supervisor</span>
+          </div>
         </div>
 
-        {/* ── Metric Cards ─────────────────────────────────── */}
+        {/* ── Metric Cards ─────────────────────────────────────── */}
         <div className="sup-metric-row">
           <MetricCard
             icon="🌾"
@@ -316,12 +324,116 @@ export default function FarmerDirectory() {
         </div>
 
         {/* ══════════════════════════════════════════════════════
-            SECTION 1 — ALL FARMERS
+            SECTION 1 — SEARCH (moved to top)
         ══════════════════════════════════════════════════════ */}
         <div className="sup-section-block">
           <div className="sup-section-header">
             <div className="sup-section-header-left">
-              <span className="sup-section-icon">👨‍🌾</span>
+              <div>
+                <div className="sup-section-title-text">Find a Farmer</div>
+                <div className="sup-section-subtitle">Search by name, village, or farm location</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="sup-search-wrap" style={{ marginBottom: 0 }}>
+            <span className="sup-search-icon">🔍</span>
+            <input
+              ref={inputRef}
+              id="farmer-search-input"
+              type="text"
+              className="sup-search-input"
+              placeholder="Search by name, village, or farm location…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              autoComplete="off"
+              spellCheck="false"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sup-muted)', fontSize: '1rem', padding: '0 8px' }}
+              >×</button>
+            )}
+          </div>
+
+          {error && (
+            <div className="sup-alert sup-alert-error" style={{ marginTop: 14 }}>{error}</div>
+          )}
+
+          {loading && (
+            <div className="sup-farmer-list" style={{ marginTop: 16 }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} className="sup-card"
+                  style={{ padding: '18px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                  <div className="sup-skeleton"
+                    style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div className="sup-skeleton" style={{ height: 14, width: '40%', marginBottom: 8 }} />
+                    <div className="sup-skeleton" style={{ height: 11, width: '60%' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && farmers.length === 0 && query.trim() && !error && (
+            <div className="sup-empty" style={{ padding: '28px 0' }}>
+              <div className="sup-empty-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" fill="#4ade80" opacity=".25"/><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" stroke="#22c55e" strokeWidth="1.5" strokeLinejoin="round"/><path d="M12 20V10" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
+              <div className="sup-empty-title">No farmers found</div>
+              <div className="sup-empty-sub">Try a different name, village, or farm area.</div>
+            </div>
+          )}
+
+          {!loading && !query.trim() && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '14px 16px', marginTop: 10,
+              background: 'var(--sage-50)', border: '1px solid var(--sage-100)',
+              borderRadius: 10, fontSize: '.82rem', color: 'var(--sup-muted)',
+            }}>
+              Start typing to search across all farmers in your network
+            </div>
+          )}
+
+          {!loading && farmers.length > 0 && (
+            <div className="sup-farmer-list" style={{ marginTop: 16 }}>
+              {farmers.map(farmer => (
+                <div
+                  key={farmer.id}
+                  id={`search-farmer-card-${farmer.id}`}
+                  className="sup-card sup-farmer-card sup-card-interactive"
+                  onClick={() => navigate(`/supervisor/farmer/${farmer.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && navigate(`/supervisor/farmer/${farmer.id}`)}
+                >
+                  <div className="sup-farmer-avatar">{initials(farmer.name)}</div>
+                  <div className="sup-farmer-info">
+                    <div className="sup-farmer-name">{farmer.name}</div>
+                    <div className="sup-farmer-meta">
+                      <span>{farmer.farm_count || 0} plot{farmer.farm_count !== '1' ? 's' : ''}</span>
+                    </div>
+                  </div>
+                  <button
+                    className="sup-btn sup-btn-primary sup-btn-sm"
+                    onClick={e => { e.stopPropagation(); navigate(`/supervisor/farmer/${farmer.id}`); }}
+                    tabIndex={-1}
+                  >
+                    View Profile →
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ══════════════════════════════════════════════════════
+            SECTION 2 — YOUR FARMERS (moved below search)
+        ══════════════════════════════════════════════════════ */}
+        <div className="sup-section-block">
+          <div className="sup-section-header">
+            <div className="sup-section-header-left">
               <div>
                 <div className="sup-section-title-text">Your Farmers</div>
                 <div className="sup-section-subtitle">
@@ -331,18 +443,16 @@ export default function FarmerDirectory() {
                 </div>
               </div>
             </div>
-            {/* Copy Invite Link button */}
             <button
               id="btn-copy-invite-link"
               className="sup-btn sup-btn-primary sup-btn-sm"
               onClick={copyInviteLink}
               disabled={copyStatus !== 'idle'}
             >
-              {copyStatus === 'copied' ? '✅ Copied!' : copyStatus === 'copying' ? '⋯' : '🔗 Copy Invite Link'}
+              {copyStatus === 'copied' ? 'Copied!' : copyStatus === 'copying' ? '⋯' : 'Copy Invite Link'}
             </button>
           </div>
 
-          {/* Skeleton */}
           {farmersLoading && (
             <div className="sup-farmer-list">
               {[1, 2, 3].map(i => (
@@ -361,9 +471,9 @@ export default function FarmerDirectory() {
 
           {!farmersLoading && allFarmers.length === 0 && (
             <div className="sup-empty" style={{ padding: '32px 0' }}>
-              <div className="sup-empty-icon">🌱</div>
+              <div className="sup-empty-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" fill="#4ade80" opacity=".25"/><path d="M12 20C12 20 5 14 5 9a7 7 0 0 1 14 0c0 5-7 11-7 11z" stroke="#22c55e" strokeWidth="1.5" strokeLinejoin="round"/><path d="M12 20V10" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round"/></svg></div>
               <div className="sup-empty-title">No farmers yet</div>
-              <div className="sup-empty-sub">Use the <strong>+ Invite Farmer</strong> button above to add your first farmer.</div>
+              <div className="sup-empty-sub">Use the <strong>Copy Invite Link</strong> above to add your first farmer.</div>
             </div>
           )}
 
@@ -395,14 +505,11 @@ export default function FarmerDirectory() {
                             background: '#fef3c7', color: '#92400e',
                             borderRadius: 99, border: '1px solid #fde68a',
                             textTransform: 'uppercase', letterSpacing: '.05em',
-                          }}>⏳ Invite Pending</span>
+                          }}>Invite Pending</span>
                         )}
                       </div>
                       <div className="sup-farmer-meta">
-                        {farmer.village && <span>📍 {farmer.village}</span>}
-                        {farmer.village && <span className="dot">·</span>}
-                        <span>🌾 {farmer.farm_count || 0} plot{farmer.farm_count !== '1' ? 's' : ''}</span>
-                        {farmer.phone && <><span className="dot">·</span><span>📞 {farmer.phone}</span></>}
+                        <span>{farmer.farm_count || 0} plot{farmer.farm_count !== '1' ? 's' : ''}</span>
                       </div>
                     </div>
                     <button
@@ -435,116 +542,12 @@ export default function FarmerDirectory() {
         </div>
 
         {/* ══════════════════════════════════════════════════════
-            SECTION 2 — SEARCH BAR
-        ══════════════════════════════════════════════════════ */}
-        <div className="sup-section-block">
-          <div className="sup-section-header">
-            <div className="sup-section-header-left">
-              <span className="sup-section-icon">🔍</span>
-              <div>
-                <div className="sup-section-title-text">Find a Farmer</div>
-                <div className="sup-section-subtitle">Search by name, village, or farm location</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="sup-search-wrap" style={{ marginBottom: 0 }}>
-            <span className="sup-search-icon">🔍</span>
-            <input
-              ref={inputRef}
-              id="farmer-search-input"
-              type="text"
-              className="sup-search-input"
-              placeholder="Search by name, village, or farm location…"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              autoComplete="off"
-              spellCheck="false"
-            />
-          </div>
-
-          {error && (
-            <div className="sup-alert sup-alert-error" style={{ marginTop: 14 }}>⚠️ {error}</div>
-          )}
-
-          {/* Skeleton */}
-          {loading && (
-            <div className="sup-farmer-list" style={{ marginTop: 16 }}>
-              {[1, 2, 3].map(i => (
-                <div key={i} className="sup-card"
-                  style={{ padding: '18px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <div className="sup-skeleton"
-                    style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div className="sup-skeleton" style={{ height: 14, width: '40%', marginBottom: 8 }} />
-                    <div className="sup-skeleton" style={{ height: 11, width: '60%' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Empty states */}
-          {!loading && farmers.length === 0 && query.trim() && !error && (
-            <div className="sup-empty" style={{ padding: '32px 0' }}>
-              <div className="sup-empty-icon">🌾</div>
-              <div className="sup-empty-title">No farmers found</div>
-              <div className="sup-empty-sub">Try a different name, village, or farm area.</div>
-            </div>
-          )}
-
-          {!loading && !query.trim() && (
-            <div style={{
-              textAlign: 'center', padding: '20px 0 4px',
-              fontSize: '.84rem', color: 'var(--sup-muted)',
-            }}>
-              Type above to search any farmer in your network.
-            </div>
-          )}
-
-          {/* Results */}
-          {!loading && farmers.length > 0 && (
-            <div className="sup-farmer-list" style={{ marginTop: 16 }}>
-              {farmers.map(farmer => (
-                <div
-                  key={farmer.id}
-                  id={`search-farmer-card-${farmer.id}`}
-                  className="sup-card sup-farmer-card sup-card-interactive"
-                  onClick={() => navigate(`/supervisor/farmer/${farmer.id}`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && navigate(`/supervisor/farmer/${farmer.id}`)}
-                >
-                  <div className="sup-farmer-avatar">{initials(farmer.name)}</div>
-                  <div className="sup-farmer-info">
-                    <div className="sup-farmer-name">{farmer.name}</div>
-                    <div className="sup-farmer-meta">
-                      {farmer.village && <span>📍 {farmer.village}</span>}
-                      {farmer.village && <span className="dot">·</span>}
-                      <span>🌾 {farmer.farm_count || 0} plot{farmer.farm_count !== '1' ? 's' : ''}</span>
-                      {farmer.phone && <><span className="dot">·</span><span>📞 {farmer.phone}</span></>}
-                    </div>
-                  </div>
-                  <button
-                    className="sup-btn sup-btn-primary sup-btn-sm"
-                    onClick={e => { e.stopPropagation(); navigate(`/supervisor/farmer/${farmer.id}`); }}
-                    tabIndex={-1}
-                  >
-                    View Profile →
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ══════════════════════════════════════════════════════
             SECTION 3 — MY LAST 5 VISITS
         ══════════════════════════════════════════════════════ */}
         <div className="sup-section-block">
           <div className="sup-section-header">
             <div className="sup-section-header-left">
-              <span className="sup-section-icon">📡</span>
+              
               <div>
                 <div className="sup-section-title-text">My Recent Visits</div>
                 <div className="sup-section-subtitle">Last 5 visits you recorded with farmers</div>
@@ -568,7 +571,7 @@ export default function FarmerDirectory() {
 
           {!myVisitsLoading && myVisits.length === 0 && (
             <div className="sup-empty" style={{ padding: '32px 0' }}>
-              <span style={{ fontSize: '2rem', display: 'block', marginBottom: 10 }}>🗒️</span>
+              
               <div className="sup-empty-title">No visits recorded yet</div>
               <div className="sup-empty-sub">Your field visits will appear here once you start recording.</div>
             </div>

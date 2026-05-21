@@ -68,7 +68,7 @@ export default function OAuthCallback() {
         animation: 'pulse 1.2s ease-in-out infinite',
         fontSize: '1.5rem',
       }}>
-        🌿
+        
       </div>
       <p style={{ color: '#4d6659', fontSize: '0.95rem' }}>
         Signing you in with Google…

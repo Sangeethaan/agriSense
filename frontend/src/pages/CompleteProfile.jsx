@@ -8,19 +8,19 @@ const ROLES = [
   {
     value: 'farmer',
     label: 'Farmer',
-    emoji: '🌾',
+    emoji: "",
     desc: 'I grow crops and manage my own farm',
   },
   {
     value: 'supervisor',
     label: 'Supervisor',
-    emoji: '🔍',
+    emoji: "",
     desc: 'I conduct field visits and audit farms',
   },
   {
     value: 'manager',
     label: 'Manager',
-    emoji: '📋',
+    emoji: "",
     desc: 'I oversee multiple supervisors & operations',
   },
 ];
@@ -108,7 +108,7 @@ export default function CompleteProfile() {
             borderRadius: 10,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.1rem',
-          }}>🌱</div>
+          }}></div>
           <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', color: '#0d2b1a', fontWeight: 700 }}>
             AgriSense
           </span>
@@ -121,7 +121,7 @@ export default function CompleteProfile() {
           color: '#0d2b1a',
           marginBottom: 8,
         }}>
-          One last step, {user?.name?.split(' ')[0] || 'there'} 👋
+          One last step, {user?.name?.split(' ')[0] || 'there'}
         </h1>
         <p style={{ color: '#4d6659', fontSize: '.9rem', marginBottom: 28, lineHeight: 1.6 }}>
           Since you signed in with Google, tell us your role so we can personalise your AgriSense experience.
@@ -139,7 +139,7 @@ export default function CompleteProfile() {
             marginBottom: 20,
             display: 'flex', gap: 8, alignItems: 'center',
           }}>
-            ⚠️ {error}
+             {error}
           </div>
         )}
 

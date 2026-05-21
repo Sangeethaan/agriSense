@@ -67,12 +67,15 @@ router.post(
       //  If transcription fails for ANY reason, we abort — no visit is saved.
       //  A visit record without spoken content is meaningless and misleading.
       let transcript = '';
+      let detectedLang = req.body.language_code || 'kn-IN';
       try {
-        transcript = await transcribeBuffer(
+        const sttResult = await transcribeBuffer(
           req.file.buffer,
           req.file.originalname,
           req.body.language_code || 'kn-IN'
         );
+        transcript = sttResult.text;
+        detectedLang = sttResult.languageCode;
       } catch (err) {
         console.error('[visits/upload] Sarvam STT error:', err.message);
         // Surface a clear, human-readable error to the frontend
@@ -101,7 +104,7 @@ router.post(
           `INSERT INTO transcripts (visit_id, full_text, detected_language)
            VALUES ($1, $2, $3)
            ON CONFLICT DO NOTHING`,
-          [visit.id, transcript, req.body.language_code || 'kn-IN']
+          [visit.id, transcript, detectedLang]
         );
       }
 
@@ -156,12 +159,15 @@ router.post(
 
       /* ── 2. Transcribe the new audio ─────────────────────── */
       let newTranscript = '';
+      let detectedLang = req.body.language_code || 'kn-IN';
       try {
-        newTranscript = await transcribeBuffer(
+        const sttResult = await transcribeBuffer(
           req.file.buffer,
           req.file.originalname,
           req.body.language_code || 'kn-IN'
         );
+        newTranscript = sttResult.text;
+        detectedLang = sttResult.languageCode;
       } catch (err) {
         console.error('[visits/append-audio] Sarvam STT error:', err.message);
         return res.status(422).json({
@@ -194,7 +200,7 @@ router.post(
           `INSERT INTO transcripts (visit_id, full_text, detected_language)
            VALUES ($1, $2, $3)
            ON CONFLICT DO NOTHING`,
-          [visitId, combinedNotes, req.body.language_code || 'kn-IN']
+          [visitId, combinedNotes, detectedLang]
         );
       }
 

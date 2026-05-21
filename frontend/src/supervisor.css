@@ -1,36 +1,33 @@
 /* ═══════════════════════════════════════════════════════════════
    Supervisor Module — Design System Extension
-   White / Sage Green nature-tech aesthetic
+   Premium Nature-Tech Aesthetic
 ═══════════════════════════════════════════════════════════════ */
 
 /* ── Supervisor Tokens ──────────────────────────────────────── */
 :root {
-  --sage-900: #1b3a2d;
-  --sage-700: #2d6649;
-  --sage-500: #4a9470;
-  --sage-400: #5fb88a;
-  --sage-300: #82cfaa;
-  --sage-200: #b5e3cc;
-  --sage-100: #daf0e6;
-  --sage-50: #f0faf5;
+  --sage-900: #0d2218;
+  --sage-800: #163527;
+  --sage-700: #1e4d38;
+  --sage-600: #2a6b4e;
+  --sage-500: #3a8a67;
+  --sage-400: #52b082;
+  --sage-300: #7ecba3;
+  --sage-200: #b0e0c8;
+  --sage-100: #d8f0e4;
+  --sage-50:  #f0faf5;
 
-  --sup-bg: #f7faf8;
-  /* page background */
+  --sup-bg: #f4f6f5;
   --sup-surface: #ffffff;
-  /* card surface */
-  --sup-border: #e2ece8;
-  /* subtle border */
-  --sup-text: #1b3a2d;
-  /* primary text */
-  --sup-muted: #5d7d6e;
-  /* secondary text */
+  --sup-border: #e4ece8;
+  --sup-text: #0d2218;
+  --sup-muted: #52756a;
 
-  --sup-shadow-sm: 0 2px 8px rgba(27, 58, 45, .08);
-  --sup-shadow-md: 0 6px 24px rgba(27, 58, 45, .11);
-  --sup-shadow-lg: 0 16px 48px rgba(27, 58, 45, .14);
+  --sup-shadow-sm: 0 1px 4px rgba(13,34,24,.06), 0 2px 8px rgba(13,34,24,.04);
+  --sup-shadow-md: 0 4px 16px rgba(13,34,24,.10), 0 1px 4px rgba(13,34,24,.06);
+  --sup-shadow-lg: 0 12px 40px rgba(13,34,24,.14), 0 4px 12px rgba(13,34,24,.08);
 
-  --sup-radius: 14px;
-  --sup-radius-lg: 22px;
+  --sup-radius: 12px;
+  --sup-radius-lg: 20px;
 }
 
 /* ── Supervisor Shell ────────────────────────────────────────── */
@@ -1704,4 +1701,362 @@
 @keyframes slideInUp {
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Farm Detail — Command Dashboard (Professional Redesign)
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Page wrapper override for Farm Detail ───────────────────── */
+.sup-shell:has(.fd-hero) {
+  background: #eef1ef;
+}
+
+/* ── Farm Hero — Split Dark Banner ───────────────────────────── */
+.fd-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 24px;
+  background: var(--sage-900);
+  border-radius: 0;
+  margin: -36px -24px 0;
+  padding: 40px 40px 36px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.fd-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 0% 50%, rgba(58,138,103,.25) 0%, transparent 70%),
+    linear-gradient(135deg, rgba(30,77,56,.9) 0%, rgba(13,34,24,1) 100%);
+  pointer-events: none;
+}
+
+.fd-hero::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 40%;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.fd-hero-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(82,176,130,.3), rgba(58,138,103,.15));
+  border: 1px solid rgba(82,176,130,.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+
+.fd-hero-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.fd-hero-eyebrow {
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--sage-400);
+  margin-bottom: 6px;
+}
+
+.fd-hero-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -.04em;
+  color: #fff;
+  margin-bottom: 10px;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+
+.fd-hero-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.fd-hero-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-right: 1px solid rgba(255,255,255,.12);
+  font-size: .78rem;
+  color: rgba(255,255,255,.6);
+  line-height: 1;
+}
+
+.fd-hero-meta-item:first-child { padding-left: 0; }
+.fd-hero-meta-item:last-child  { border-right: none; }
+.fd-hero-meta-icon { font-size: .75rem; opacity: .7; }
+
+/* Task progress pill */
+.fd-hero-progress {
+  position: relative;
+  z-index: 1;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 16px 22px;
+  min-width: 150px;
+  text-align: center;
+}
+
+.fd-hero-progress-label {
+  font-size: .58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: rgba(255,255,255,.45);
+  margin-bottom: 10px;
+}
+
+.fd-hero-progress-bar-wrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,.12);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.fd-hero-progress-bar {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #34d399, #10b981);
+  box-shadow: 0 0 10px rgba(52,211,153,.6);
+  transition: width .7s cubic-bezier(.4,0,.2,1);
+}
+
+.fd-hero-progress-count {
+  font-size: .9rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -.01em;
+}
+
+/* ── Tab Navigation — Clean Horizontal Bar ───────────────────── */
+.fd-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--sup-surface);
+  border-bottom: 1.5px solid var(--sup-border);
+  margin: 0 -24px 32px;
+  padding: 0 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  box-shadow: 0 1px 0 0 var(--sup-border);
+}
+
+.fd-tab-bar::-webkit-scrollbar { display: none; }
+
+.fd-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 16px 20px 15px;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  background: transparent;
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--sup-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s ease, border-color .15s ease;
+  flex-shrink: 0;
+  letter-spacing: .01em;
+}
+
+.fd-tab:hover:not(.active) {
+  color: var(--sup-text);
+  background: var(--sage-50);
+}
+
+.fd-tab.active {
+  color: var(--sage-700);
+  border-bottom-color: var(--sage-500);
+}
+
+.fd-tab-icon { font-size: .85rem; line-height: 1; }
+
+.fd-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 99px;
+  font-size: .64rem;
+  font-weight: 700;
+  background: var(--sage-100);
+  color: var(--sage-700);
+  letter-spacing: 0;
+}
+
+.fd-tab.active .fd-tab-badge {
+  background: var(--sage-700);
+  color: #fff;
+}
+
+/* ── Tab Panel ───────────────────────────────────────────────── */
+.fd-tab-panel {
+  animation: fdFadeIn .2s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes fdFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Record Visit Card ───────────────────────────────────────── */
+.fd-record-hero {
+  background: var(--sup-surface);
+  border: 1px solid var(--sup-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--sup-shadow-md);
+}
+
+.fd-record-hero::before {
+  display: none;
+}
+
+.fd-record-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 28px 32px 24px;
+  border-bottom: 1px solid var(--sup-border);
+  background: linear-gradient(to right, var(--sage-50), #fff);
+}
+
+.fd-record-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--sage-600), var(--sage-800));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(42,107,78,.3);
+}
+
+.fd-record-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--sup-text);
+  margin-bottom: 3px;
+  letter-spacing: -.02em;
+}
+
+.fd-record-sub {
+  font-size: .8rem;
+  color: var(--sup-muted);
+  line-height: 1.5;
+}
+
+.fd-data-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .72rem;
+  color: var(--sage-700);
+  background: var(--sage-50);
+  border: 1px solid var(--sage-200);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin: 20px 32px;
+  font-weight: 600;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .fd-hero {
+    grid-template-columns: 1fr;
+    margin: -24px -16px 0;
+    padding: 28px 20px 24px;
+  }
+  .fd-hero-body { flex-wrap: wrap; gap: 14px; }
+  .fd-hero-title { font-size: 1.5rem; }
+  .fd-tab-bar { margin: 0 -16px 24px; padding: 0 16px; }
+  .fd-tab { padding: 12px 14px 11px; font-size: .78rem; }
+  .fd-record-header { padding: 20px 18px; }
+  .fd-data-lock { margin: 16px 18px; }
+}
+
+/* ── Professional Page Header (replaces greeting) ─────────────── */
+.sup-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid var(--sup-border);
+}
+
+.sup-page-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--sup-text);
+  letter-spacing: -.03em;
+  margin: 0 0 4px;
+  line-height: 1;
+}
+
+.sup-page-date {
+  font-size: .8rem;
+  color: var(--sup-muted);
+  margin: 0;
+  font-weight: 500;
+}
+
+.sup-page-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sup-page-role-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--sage-700);
+  background: var(--sage-50);
+  border: 1px solid var(--sage-200);
+  border-radius: 8px;
+  padding: 7px 13px;
 }

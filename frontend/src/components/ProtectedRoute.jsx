@@ -24,7 +24,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
   if (loading) {
     return (
       <div className="auth-loading">
-        <span style={{ fontSize: '1.5rem', animation: 'spin .65s linear infinite' }}>🌱</span>
+        <span style={{ fontSize: '1.5rem', animation: 'spin .65s linear infinite' }}></span>
       </div>
     );
   }
